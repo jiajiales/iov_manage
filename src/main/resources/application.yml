@@ -1,0 +1,24 @@
+server:
+  port: 8005
+  servlet:
+    context-path: /audiDataCollect
+
+
+spring:
+  datasource :
+      driver-class-name : org.postgresql.Driver
+      url : jdbc:postgresql://36.111.84.170:5442/mineplay
+      username : postgres
+      password : cennavi2018
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  jpa:
+      show-sql: true
+
+logging:
+  path: F:/audiDataCollect_loggings/
+  file:
+    max-history: 180
