@@ -19,5 +19,5 @@ Class-Path: spring-core-5.1.5.RELEASE.jar log4j-api-2.11.2.jar HikariC
  RELEASE.jar jackson-datatype-jsr310-2.9.8.jar tomcat-embed-websocket-
  9.0.16.jar jackson-datatype-jdk8-2.9.8.jar protobuf-javanano-3.0.0-al
  pha-2.jar javax.annotation-api-1.3.2.jar
-Main-Class: com.cennavi.audi_rtm_poc.util.ImportTempData
+Main-Class: com.cennavi.audi_data_collect.util.ImportTempData
 
