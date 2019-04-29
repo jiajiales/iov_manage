@@ -7,9 +7,9 @@ server:
 spring:
   datasource :
       driver-class-name : org.postgresql.Driver
-      url : jdbc:postgresql://36.111.84.170:5442/mineplay
+      url : jdbc:postgresql://36.111.83.14:5442/audi_data
       username : postgres
-      password : cennavi2018
+      password : superman
 
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
