@@ -1,4 +1,4 @@
-package com.cennavi.audi_rtm_poc;
+package com.cennavi.audi_data_collect;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
