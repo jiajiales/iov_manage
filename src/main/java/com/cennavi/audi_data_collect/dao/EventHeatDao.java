@@ -18,11 +18,14 @@ public class EventHeatDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public long getCurrentNum(String time){
-        String sql="SELECT count(DISTINCT car_id) FROM audi_poc_car_heat WHERE hour='"+time+"'";
-        Map<String,Object> num = jdbcTemplate.queryForMap(sql);
-        return (long) num.get("count");
+    public List<Map<String, Object>> getGaoSuLines(){
+        String sql="select name,st_astext(st_transform(geom,4527)) as wkt,road_id from gaosu where valid=1";
+        return jdbcTemplate.queryForList(sql);
     }
-
+    
+    public void insertSegment(Map<String, Object> map) {
+    	String sql="insert into gaosu_segment(road_name,road_id,geom) values ('"+map.get("road_name")+"',"+map.get("road_id")+",st_transform(st_geomfromtext('"+map.get("geom")+"',4527),4326))";
+        jdbcTemplate.execute(sql);
+    }
 
 }
