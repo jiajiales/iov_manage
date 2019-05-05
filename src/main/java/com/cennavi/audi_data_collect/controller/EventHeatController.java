@@ -63,6 +63,8 @@ public class EventHeatController {
             		saveSegment(cs[j],cs[j+1]);
 				}
             	
+            	
+            	
             	clist.add(cs[cs.length-1]);
             	newcs1 = new Coordinate[clist.size()];
     			for(int n=0;n<clist.size();n++) {
