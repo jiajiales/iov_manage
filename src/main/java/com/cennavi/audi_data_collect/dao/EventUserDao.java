@@ -16,7 +16,7 @@ public class EventUserDao {
 	 @Autowired
 	    private JdbcTemplate jdbcTemplate;
 	 
-	 //验证用户信息
+	 //验证用户信息111
 	public boolean check(String name, String password) {
 		
 		System.err.println(name);
@@ -112,25 +112,34 @@ public class EventUserDao {
 	
 	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort ) {
 		String sql="SELECT  t1.type_name,COALESCE(t2.nums,0) AS  num    from event_type t1 LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  ,b.type_name as eventName  FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1";
+		
+		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1 ";
+		
 		if (!cityName.equals("") && cityName!=null) {
 				  sql += " and a.city_name =  '"+cityName+"' ";
+				  sql2 += " and a.city_name =  '"+cityName+"' ";
 				 
 			  		}
 			  if (!eventTypes.equals("") && eventTypes!=null) {
 				  sql += " and a.event_type IN ( "+eventTypes+" )";
-				
+				  sql2 += " and a.event_type IN ( "+eventTypes+" )";				
 			  		}
 			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
 				  
 				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-			  		}
+				  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+
+			  }
 			  
 			  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
 				  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
+				  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
+
 			  }
 			  
 			  if ( !segmentIds.equals("") &&segmentIds!=null) {
-				  sql += " and a.segment_id IN ( "+segmentIds+" ) ";
+				  sql += "and a.segment_id IN ( "+segmentIds+" ) ";
+				  sql2 += "and a.segment_id IN ( "+segmentIds+" ) ";
 				
 			  		}
 			  sql+=" group  by b.type_name   )  t2  ON t2.eventName=t1.type_name ";
@@ -139,6 +148,9 @@ public class EventUserDao {
 				  sql += "  order by  num  "+sort+"";
 			  		}
 			  System.err.println(sql);
+			  double k=jdbcTemplate.queryForObject(sql2,double.class);
+				 System.out.println("k:"+k);
+				 
 			  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 				JSONObject json;
 				 JSONArray jsonArray = new JSONArray();
