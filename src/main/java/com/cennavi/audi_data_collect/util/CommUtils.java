@@ -3,7 +3,17 @@ package com.cennavi.audi_data_collect.util;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import com.alibaba.fastjson.JSON;
 
 /**
  * 公共变量存放工具
@@ -50,5 +60,47 @@ public class CommUtils {
 		}
 		long[] times = {day, hour, min, sec};
 		return times;
+	}
+	
+	public static Map<String, Object> getGeojson(JdbcTemplate jdbc, String sql)
+			throws Exception {
+
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		map.put("type", "FeatureCollection");
+
+		List<Map<String, Object>> results = jdbc.queryForList(sql);
+
+		List<Map<String, Object>> features = new ArrayList<Map<String, Object>>();
+
+		for (Map<String, Object> m : results) {
+			
+			int hashCode = 0;
+			
+			if (m.containsKey("geom")) {
+				hashCode = m.get("geom").hashCode();
+				m.remove("geom");
+			}
+			Map<String, Object> feature = new HashMap<String, Object>();
+			
+			feature.put("type", "Feature");
+			Map<String, Object> properties = new HashMap<String, Object>();
+			properties.put("tips_id", String.valueOf(hashCode));
+			Iterator<Entry<String, Object>> it = m.entrySet().iterator();
+			while (it.hasNext()) {
+				Entry<String, Object> en = it.next();
+				if (!"geojson".equals(en.getKey())) {
+					properties.put(en.getKey(), en.getValue());
+				}
+			}
+			feature.put("properties", properties);
+			feature.put("geometry", JSON.parse(m.get("geojson").toString()));
+			features.add(feature);
+
+		}
+		map.put("features", features);
+
+		return map;
+
 	}
 }
