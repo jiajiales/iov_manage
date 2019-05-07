@@ -35,7 +35,7 @@ public class EventUserDao {
 	}
 	
 	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames) {
+	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous) {
 		
 		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time ,date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new WHERE  1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new WHERE 1=1";
@@ -48,6 +48,7 @@ public class EventUserDao {
 			  sql += " and event_type =  '"+eventType+"' ";
 			  sql2 += " and event_type =  '"+eventType+"' ";
 		  		}
+		 
 		  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
 			  sql += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";
 			  sql2 += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";

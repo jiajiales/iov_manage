@@ -21,8 +21,8 @@ public class EventUserService {
 	}
 	
 	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIds, String startTimeFrames, String endTimeFrames) {
-		return eventUserDao.queryHistogram(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames);
+	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIds, String startTimeFrames, String endTimeFrames, String isContinuous) {
+		return eventUserDao.queryHistogram(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous);
 	}
 	//数据统计
 	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime,
