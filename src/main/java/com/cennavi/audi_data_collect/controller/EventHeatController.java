@@ -36,13 +36,14 @@ public class EventHeatController {
     List<LineString> slist = null;
     
     /**
-     * 处理高速数据.
+     * 计算并按200米分割高速公路数据.
      */
     @ResponseBody
-    @RequestMapping("/dealData")
-    public void dealData(){
+    @RequestMapping("/dealGaosuData")
+    public void dealGaosuData(){
         try {
-            List<Map<String, Object>> resultList = eventHeatService.getGaoSuLines();
+            //获取有效的高速公路数据
+        	List<Map<String, Object>> resultList = eventHeatService.getGaoSuLines();
             String geomStr = "";
             Geometry geom;
             Coordinate[] cs;
@@ -60,11 +61,11 @@ public class EventHeatController {
             	cs = geom.getCoordinates();
             	
             	for(int j=0;j<(cs.length-1);j++) {
+            		//分割处理
             		saveSegment(cs[j],cs[j+1]);
 				}
-            	
-            	
-            	
+
+            	//针对最后一段不足200米的路段的处理
             	clist.add(cs[cs.length-1]);
             	newcs1 = new Coordinate[clist.size()];
     			for(int n=0;n<clist.size();n++) {
@@ -73,6 +74,7 @@ public class EventHeatController {
     			
     			slist.add(geometryFactory.createLineString(newcs1));
             	
+    			//将分割后的路段保存到数据库
             	for(int m=0;m<slist.size();m++) {
             		Map<String, Object> map =  new HashMap<String, Object>();
             		map.put("road_name", road_name);
@@ -100,7 +102,10 @@ public class EventHeatController {
         
         point1 = geometryFactory.createPoint(c1);
 		point2 = geometryFactory.createPoint(c2);
+		
+		//添加200米路段组成的点
 		clist.add(c1);
+		
 		System.out.println("point1="+point1.toText());
 		System.out.println("point2="+point2.toText());
 		distance = new BigDecimal(point1.distance(point2));
@@ -116,34 +121,77 @@ public class EventHeatController {
 			p1_y = new BigDecimal(point1.getY());
 			p2_x = new BigDecimal(point2.getX());
 			p2_y = new BigDecimal(point2.getY());
+			
+			//计算截取点的x/y坐标
 			np_x = t_distance.multiply(p2_x.subtract(p1_x).divide(distance, 2, BigDecimal.ROUND_HALF_UP)).add(p1_x).setScale(7, BigDecimal.ROUND_HALF_UP);
 			np_y = t_distance.multiply(p2_y.subtract(p1_y).divide(distance, 2, BigDecimal.ROUND_HALF_UP)).add(p1_y).setScale(7, BigDecimal.ROUND_HALF_UP);
 			System.out.println("new point x = " + np_x + ";y = " + np_y);
 			
+			//组装200米路段数组
 			newcs = new Coordinate[clist.size()+1];
 			for(int k=0;k<clist.size();k++) {
 				newcs[k] = clist.get(k);
 			}
 			nc = new Coordinate(np_x.doubleValue(), np_y.doubleValue());
 			newcs[newcs.length-1] = nc;
-			segment = geometryFactory.createLineString(newcs);
 			
+			//生成200米路段数据
+			segment = geometryFactory.createLineString(newcs);
+			//添加进此高速公路的路段分割数组
 			slist.add(segment);
 			
+			//生成200米路段数据后路段累积长度重设为0
 			roadLength = new BigDecimal(0);
+			
+			//生成200米路段数据后清空
 			clist = new ArrayList<Coordinate>();
 			
-			
+			//如果两点距离很长，递归处理
 			saveSegment(nc, c2);
 		}
 		
     }
     
+    /**
+     * 匹配事件数据和路段数据的关联关系.
+     */
+    @ResponseBody
+    @RequestMapping("/dealEventData")
+    public void dealEventData(){
+        try {
+            //关联事件数据和路段数据
+        	eventHeatService.getDealEventRelationship();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 根据城市、事件、日期、时间、道路条件查询事件分布聚合图.
+     */
+    @ResponseBody
+    @RequestMapping("/eventAggregateFigure")
+    public Object eventAggregateFigure(String cityName, Integer eventId, String date, String time){
+        try {
+        	Map<String, Object> paramMap = new HashMap<String, Object>();
+        	paramMap.put("cityName", cityName);
+        	paramMap.put("eventId", eventId);
+        	paramMap.put("date", date);
+        	paramMap.put("time", time);
+    		Map<String, Object> geojson = eventHeatService.eventAggregateFigure(paramMap);
+    		return geojson;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    
     private static double rad(double d) {
 		return d * Math.PI / 180.0;
 	}
     
-    /**
+    /**123
 	 * 通过经纬度获取距离(单位：米)
 	 * 
 	 * @param lat1
@@ -167,15 +215,9 @@ public class EventHeatController {
 		return s;
 	}
 	
-	public static void t1(int i) {
-		System.out.println("t1------"+(i--));
-		
-		if(i>0)t1(i);
-		System.out.println("==========t1");
-	}
 	
 	public static void main(String[] args) {
-		t1(5);
+		//t1(5);
 	}
 
 }
