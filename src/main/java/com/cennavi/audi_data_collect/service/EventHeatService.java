@@ -20,6 +20,14 @@ public class EventHeatService {
     	return carHeatDao.getGaoSuLines();
     }
     
+    public void getDealEventRelationship(){
+    	carHeatDao.getDealEventRelationship();
+    }
+    
+    public Map<String, Object> eventAggregateFigure(Map<String, Object> paramMap) throws Exception{
+    	return carHeatDao.eventAggregateFigure(paramMap);
+    }
+    
     public void insertSegment(Map<String, Object> map) {
     	carHeatDao.insertSegment(map);
     }
