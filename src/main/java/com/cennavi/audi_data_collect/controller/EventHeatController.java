@@ -191,7 +191,7 @@ public class EventHeatController {
 		return d * Math.PI / 180.0;
 	}
     
-    /**
+    /**123
 	 * 通过经纬度获取距离(单位：米)
 	 * 
 	 * @param lat1
