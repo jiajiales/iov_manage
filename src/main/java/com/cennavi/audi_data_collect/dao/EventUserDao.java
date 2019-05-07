@@ -130,7 +130,7 @@ public class EventUserDao {
 			  }
 			  
 			  if ( !segmentIds.equals("") &&segmentIds!=null) {
-				  sql += "s and a.segment_id IN ( "+segmentIds+" ) ";
+				  sql += " and a.segment_id IN ( "+segmentIds+" ) ";
 				
 			  		}
 			  sql+=" group  by b.type_name   )  t2  ON t2.eventName=t1.type_name ";
@@ -138,6 +138,7 @@ public class EventUserDao {
 			  if ( !sort.equals("") &&sort!=null) {
 				  sql += "  order by  num  "+sort+"";
 			  		}
+			  System.err.println(sql);
 			  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 				JSONObject json;
 				 JSONArray jsonArray = new JSONArray();
