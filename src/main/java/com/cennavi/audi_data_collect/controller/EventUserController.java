@@ -81,7 +81,7 @@ public class EventUserController {
 			  
 			  
 //			  json.getString("isContinuous");
-			return	eventUserService.queryHistogram(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames);
+			return	eventUserService.queryHistogram(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"));
 		
 		}
 		
