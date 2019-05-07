@@ -111,7 +111,7 @@ public class EventUserDao {
 	}
 	
 	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort ) {
-		String sql="SELECT  t1.type_name,COALESCE(t2.nums,0) AS  num    from event_type t1 LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  ,b.type_name as eventName  FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1";
+		String sql="SELECT  t1.type_name,t1.id,COALESCE(t2.nums,0) AS  num    from event_type t1 LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  ,b.type_name as eventName  FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1";
 		
 		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1 ";
 		
@@ -150,11 +150,29 @@ public class EventUserDao {
 			  System.err.println(sql);
 			  double k=jdbcTemplate.queryForObject(sql2,double.class);
 				 System.out.println("k:"+k);
-				 
+				
 			  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+			  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+			  System.err.println(queryForList);
+			  for (Map<String, Object> map : queryForList) {
+				  Map<String, Object> map2=  new HashMap<String, Object>();
+					 for (String s : map.keySet()) {
+						 map2.put(s, map.get(s));
+						 if(s.equals("num")) {
+							 double a=Integer.parseInt(map.get(s).toString());
+							 double n=(double)Math.round(a/k*10000)/100;
+							 if(n==100.00) {
+								 n=99.99;
+							 }
+							 map2.put("percentage",  n);
+						 }
+			            }
+					 
+					 queryForList2.add(map2);
+			}
 				JSONObject json;
 				 JSONArray jsonArray = new JSONArray();
-			  for (Map<String, Object> map : queryForList) {
+			  for (Map<String, Object> map : queryForList2) {
 				  json =new JSONObject(map);
 				  jsonArray.add(json);
 			}
