@@ -31,5 +31,9 @@ public class EventHeatService {
     public void insertSegment(Map<String, Object> map) {
     	carHeatDao.insertSegment(map);
     }
+    
+    public List<Map<String, Object>> getRoadList() throws Exception{
+    	return carHeatDao.getRoadList();
+    }
 
 }

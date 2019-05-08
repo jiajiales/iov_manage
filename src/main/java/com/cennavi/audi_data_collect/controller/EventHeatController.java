@@ -19,6 +19,9 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.io.WKTReader;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
 /**
  * Created by cennavi on 2019/4/25.
  */
@@ -186,12 +189,28 @@ public class EventHeatController {
         }
     }
     
+    /**
+     * 获取道路列表.
+     */
+    @ResponseBody
+    @RequestMapping("/roadList")
+    public Object getRoadList(){
+        try {
+        	
+    		List<Map<String, Object>> list = eventHeatService.getRoadList();
+    		return JSONArray.fromObject(list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
     
     private static double rad(double d) {
 		return d * Math.PI / 180.0;
 	}
     
-    /**123
+    /**
 	 * 通过经纬度获取距离(单位：米)
 	 * 
 	 * @param lat1

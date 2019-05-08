@@ -51,5 +51,10 @@ public class EventHeatDao {
 		return geojson;
     }
     
+    public List<Map<String, Object>> getRoadList() throws Exception{
+    	String sql = "SELECT g.name,g.r_id FROM gaosu g where g.r_id>0 group by g.name,g.r_id order by g.r_id";
+    	return jdbcTemplate.queryForList(sql);
+    }
+    
 
 }
