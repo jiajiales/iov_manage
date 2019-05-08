@@ -1,5 +1,9 @@
 server:
+<<<<<<< HEAD
   port: 8009
+=======
+  port: 8005
+>>>>>>> branch 'master' of https://gitlab.navinfo.com/audi_group/audi_data_collect.git
   servlet:
     context-path: /audiDataCollect
 

@@ -21,18 +21,18 @@ public class EventUserService {
 	}
 	
 	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIds, String startTimeFrames, String endTimeFrames, String isContinuous) {
-		return eventUserDao.queryHistogram(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous);
+	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIds, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
+		return eventUserDao.queryHistogram(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous,dataLists);
 	}
 	//数据统计
 	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime,
-			String segmentIds, String startTimeFrames, String endTimeFrames,String sort) {
-		return eventUserDao.dataStatistics(cityName,eventTypes,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,sort);
+			String segmentIds, String startTimeFrames, String endTimeFrames,String sort, String isContinuous, String dataLists) {
+		return eventUserDao.dataStatistics(cityName,eventTypes,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,sort,isContinuous,dataLists);
 	}
 	
 	//折线图
-	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames) {
-		return eventUserDao.brokenLine(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames);
+	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous ,String dataLists) {
+		return eventUserDao.brokenLine(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous,dataLists);
 	}
 
 }
