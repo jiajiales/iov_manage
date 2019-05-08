@@ -37,21 +37,33 @@ public class EventUserController {
 		@RequestMapping(value = "/queryHistogram")
 		public Object queryHistogram(@RequestBody  String queryHistogramDate){
 			
-			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="";
+			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="", dataLists="";
 			  JSONObject  json = JSONObject.parseObject(queryHistogramDate);
-			   JSONArray str = json.getJSONArray("dataList");
-			   Map<Integer, String> map=new HashMap<Integer,String>();
-			   int i=0;
-			   for (Object obj : str) {
-				   map.put(i, obj.toString());
-				   i++;
-			}
-			   if(!map.get(0).equals("") && map.get(0)!=null) {
-				   startTmie=map.get(0);
-			   }
-			   if(!map.get(1).equals("") && map.get(1)!=null) {
-				   endTime=map.get(1);
-			   }
+			  if(json.getString("isContinuous").equals("true")) {
+				   JSONArray str = json.getJSONArray("dataList");
+				   Map<Integer, String> map=new HashMap<Integer,String>();
+				   int i=0;
+				   for (Object obj : str) {
+					   map.put(i, obj.toString());
+					   i++;
+				}
+				   if(!map.get(0).equals("") && map.get(0)!=null) {
+					   startTmie=map.get(0);
+				   }
+				   if(!map.get(1).equals("") && map.get(1)!=null) {
+					   endTime=map.get(1);
+				   }
+				  
+			  }else {
+				  JSONArray dataList = json.getJSONArray("dataList");
+				   String data=null;
+				   String endData="";
+				   for (Object obj : dataList) {
+					   data ="'" +obj + "',";
+					   endData += data;
+				}
+				   dataLists= endData.substring(0,endData.length()-1);
+			  }
 			   
 			   JSONArray timeFrames = json.getJSONArray("timeFrame");
 			   Map<Integer, String> map2=new HashMap<Integer,String>();
@@ -81,7 +93,7 @@ public class EventUserController {
 			  
 			  
 //			  json.getString("isContinuous");
-			return	eventUserService.queryHistogram(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"));
+			return	eventUserService.queryHistogram(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"),dataLists);
 		
 		}
 		
@@ -90,21 +102,34 @@ public class EventUserController {
 	@RequestMapping(value = "/dataStatistics")
 	public Object dataStatistics(@RequestBody String dataStatisticsDate){
 		
-		String startTmie="",endTime="",startTimeFrames="",endTimeFrames="";
+		String startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="";
 		  JSONObject  json = JSONObject.parseObject(dataStatisticsDate);
-		   JSONArray str = json.getJSONArray("dataList");
-		   Map<Integer, String> map=new HashMap<Integer,String>();
-		   int i=0;
-		   for (Object obj : str) {
-			   map.put(i, obj.toString());
-			   i++;
-		}
-		   if(!map.get(0).equals("") && map.get(0)!=null) {
-			   startTmie=map.get(0);
-		   }
-		   if(!map.get(1).equals("") && map.get(1)!=null) {
-			   endTime=map.get(1);
-		   }
+		  if(json.getString("isContinuous").equals("true")) {
+			   JSONArray str = json.getJSONArray("dataList");
+			   Map<Integer, String> map=new HashMap<Integer,String>();
+			   int i=0;
+			   for (Object obj : str) {
+				   map.put(i, obj.toString());
+				   i++;
+			}
+			   if(!map.get(0).equals("") && map.get(0)!=null) {
+				   startTmie=map.get(0);
+			   }
+			   if(!map.get(1).equals("") && map.get(1)!=null) {
+				   endTime=map.get(1);
+			   }
+			  
+		  }else {
+			  JSONArray dataList = json.getJSONArray("dataList");
+			   String data=null;
+			   String endData="";
+			   for (Object obj : dataList) {
+				   data ="'" +obj + "',";
+				   endData += data;
+			}
+			   dataLists= endData.substring(0,endData.length()-1);
+		  }
+		
 		   
 		   JSONArray timeFrames = json.getJSONArray("timeFrame");
 		   
@@ -141,7 +166,7 @@ public class EventUserController {
 			    roadSecList= endstr2.substring(0,endstr2.length()-1);
 		  }
 		 
-		return	eventUserService.dataStatistics(json.getString("city"),eventsList,startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("sort"));
+		return	eventUserService.dataStatistics(json.getString("city"),eventsList,startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("sort"),json.getString("isContinuous"),dataLists);
 				
 	}
 	
@@ -149,22 +174,35 @@ public class EventUserController {
 		@RequestMapping(value = "/brokenLine")
 		public Object brokenLine(@RequestBody String brokenLineData){
 			
-			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="";
+			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="";
 			
 			  JSONObject  json = JSONObject.parseObject(brokenLineData);
-			   JSONArray str = json.getJSONArray("dataList");
-			   Map<Integer, String> map=new HashMap<Integer,String>();
-			   int i=0;
-			   for (Object obj : str) {
-				   map.put(i, obj.toString());
-				   i++;
-			}
-			   if(!map.get(0).equals("") && map.get(0)!=null) {
-				   startTmie=map.get(0);
-			   }
-			   if(!map.get(1).equals("") && map.get(1)!=null) {
-				   endTime=map.get(1);
-			   }
+			 
+			  if(json.getString("isContinuous").equals("true")) {
+				   JSONArray str = json.getJSONArray("dataList");
+				   Map<Integer, String> map=new HashMap<Integer,String>();
+				   int i=0;
+				   for (Object obj : str) {
+					   map.put(i, obj.toString());
+					   i++;
+				}
+				   if(!map.get(0).equals("") && map.get(0)!=null) {
+					   startTmie=map.get(0);
+				   }
+				   if(!map.get(1).equals("") && map.get(1)!=null) {
+					   endTime=map.get(1);
+				   }
+				  
+			  }else {
+				  JSONArray dataList = json.getJSONArray("dataList");
+				   String data=null;
+				   String endData="";
+				   for (Object obj : dataList) {
+					   data ="'" +obj + "',";
+					   endData += data;
+				}
+				   dataLists= endData.substring(0,endData.length()-1);
+			  }
 			   
 			   JSONArray timeFrames = json.getJSONArray("timeFrame");
 			   Map<Integer, String> map2=new HashMap<Integer,String>();
@@ -192,6 +230,6 @@ public class EventUserController {
 				    roadSecList= endstr2.substring(0,endstr2.length()-1);
 			  }
 			   
-			return	eventUserService.brokenLine(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames);
+			return	eventUserService.brokenLine(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"),dataLists);
 		}
 }

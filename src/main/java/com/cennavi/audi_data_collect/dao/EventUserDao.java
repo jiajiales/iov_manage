@@ -35,7 +35,7 @@ public class EventUserDao {
 	}
 	
 	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous) {
+	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
 		
 		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time ,date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new WHERE  1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new WHERE 1=1";
@@ -49,10 +49,19 @@ public class EventUserDao {
 			  sql2 += " and event_type =  '"+eventType+"' ";
 		  		}
 		 
-		  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-			  sql += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";
-			  sql2 += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";
-		  		}
+		  
+		  if(isContinuous.equals("true")) {
+			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
+				  
+				  sql += " AND to_timestamp(upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+				  sql2 += " AND to_timestamp(upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+
+			  }
+		  }else {
+			  sql +="AND  (to_timestamp(upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+			  sql2 +="AND  (to_timestamp(upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+
+		  }
 		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
 			  sql  += " and substring(upload_time,12,16)>= '"+startTimeFrames+"' and substring(upload_time,12,16)<= '"+endTimeFrames+"'";
 			  sql2  += " and substring(upload_time,12,16)>= '"+startTimeFrames+"' and substring(upload_time,12,16)<= '"+endTimeFrames+"'";
@@ -110,7 +119,7 @@ public class EventUserDao {
 		return jsonArray;
 	}
 	
-	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort ) {
+	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort, String isContinuous, String dataLists ) {
 		String sql="SELECT  t1.type_name,t1.id,COALESCE(t2.nums,0) AS  num    from event_type t1 LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  ,b.type_name as eventName  FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1";
 		
 		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b     left join  collection_info_new   a   on a.event_type=b.type_code WHERE 1=1 ";
@@ -124,12 +133,20 @@ public class EventUserDao {
 				  sql += " and a.event_type IN ( "+eventTypes+" )";
 				  sql2 += " and a.event_type IN ( "+eventTypes+" )";				
 			  		}
-			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-				  
-				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-				  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+			  
+			  if(isContinuous.equals("true")) {
+				  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
+					  
+					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+					  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+
+				  }
+			  }else {
+				  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+				  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
 
 			  }
+			 
 			  
 			  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
 				  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
@@ -153,7 +170,6 @@ public class EventUserDao {
 				
 			  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 			  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
-			  System.err.println(queryForList);
 			  for (Map<String, Object> map : queryForList) {
 				  Map<String, Object> map2=  new HashMap<String, Object>();
 					 for (String s : map.keySet()) {
@@ -178,9 +194,10 @@ public class EventUserDao {
 			}
 			  	
 		return jsonArray;
+		
 	}
 	//折线图
-	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames) {
+	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous,String dataLists) {
 		String sql="SELECT count(*) as mycount,myhour,road_name FROM (  SELECT  a.upload_time ,b.road_name, date_part('hour',to_timestamp(a.upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new a  left join gaosu_segment b  on a.segment_id=b.id where 1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new WHERE 1=1";
 		if (!cityName.equals("") && cityName!=null) {
@@ -191,10 +208,25 @@ public class EventUserDao {
 			  sql += " and a.event_type =  '"+eventType+"' ";
 			  sql2 += " and  event_type =  '"+eventType+"' ";
 		  		}
-		  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-			  sql += " AND a.upload_time>='"+startTime+"' and a.upload_time <=  '"+endTime+"' ";
-			  sql2 += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";
-		  		}
+//		  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
+//			  sql += " AND a.upload_time>='"+startTime+"' and a.upload_time <=  '"+endTime+"' ";
+//			  sql2 += " AND upload_time>='"+startTime+"' and upload_time <=  '"+endTime+"' ";
+//		  		}
+//		  
+		  
+		  if(isContinuous.equals("true")) {
+			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
+				  
+				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+				  sql2 += " AND to_timestamp(upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
+
+			  }
+		  }else {
+			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+			  sql2 +="AND  (to_timestamp(upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+
+		  }
+		  
 		  
 		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
 			  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
