@@ -51,7 +51,7 @@ public class EventHeatDao {
     	String isContinuous = map.get("isContinuous").toString();
     	String sql = "";
     	
-    	sql = "select e.type_code typeId,e.type_name typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
+    	sql = "select e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
 				"left join gaosu_segment s on s.id=c.segment_id  " + 
     			"left join event_type e on c.event_type=e.type_code " + 
 				"where 1=1 ";
@@ -99,7 +99,7 @@ public class EventHeatDao {
     }
     
     public List<Map<String, Object>> getRoadList() throws Exception{
-    	String sql = "SELECT g.name,g.r_id FROM gaosu g where g.r_id>0 group by g.name,g.r_id order by g.r_id";
+    	String sql = "SELECT g.en_name,g.r_id FROM gaosu g where g.r_id>0 group by g.en_name,g.r_id order by g.r_id";
     	return jdbcTemplate.queryForList(sql);
     }
     
