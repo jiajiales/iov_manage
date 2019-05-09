@@ -1,9 +1,13 @@
 package com.cennavi.audi_data_collect.service;
 
 
+import java.text.ParseException;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.cennavi.audi_data_collect.bean.CVSBean;
 import com.cennavi.audi_data_collect.dao.EventUserDao;
 
 @Service
@@ -33,6 +37,14 @@ public class EventUserService {
 	//折线图
 	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous ,String dataLists) {
 		return eventUserDao.brokenLine(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous,dataLists);
+	}
+	public List<CVSBean> exportCsv(String cityName, String eventType, String startTime, String endTime, String roadSecList,
+			String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) throws ParseException {
+		return eventUserDao.exportCsv(cityName,eventType,startTime,endTime,roadSecList,startTimeFrames,endTimeFrames,isContinuous,dataLists);
+	}
+	public List<CVSBean> exportTestCsv() throws ParseException {
+		// TODO Auto-generated method stub
+		return eventUserDao.exportTestCsv();
 	}
 
 }
