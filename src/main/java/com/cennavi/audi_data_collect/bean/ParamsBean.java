@@ -15,15 +15,6 @@ public class ParamsBean {
     private Integer roadSecList[];
     private String sort;
     private String timeFrame[];
-    private Integer segmentId[];
-
-    public Integer[] getSegmentId() {
-        return segmentId;
-    }
-
-    public void setSegmentId(Integer[] segmentId) {
-        this.segmentId = segmentId;
-    }
 
     public String getCity() {
         return city;

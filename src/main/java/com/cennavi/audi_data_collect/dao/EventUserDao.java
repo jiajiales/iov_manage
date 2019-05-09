@@ -45,7 +45,7 @@ public class EventUserDao {
 	//直方图
 	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
 		
-		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , substring(upload_time,12,2) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
+		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new a LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE  1=1";
 		 
 		if (!cityName.equals("") && cityName!=null) {
@@ -75,8 +75,6 @@ public class EventUserDao {
 			  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
 		  }
 		  if ( !segmentIdArr.equals("") &&segmentIdArr!=null) {
-//			  sql += " and a.segment_id IN ( "+segmentIdArr+" ) ";
-//			  sql2 += " and a.segment_id IN ( "+segmentIdArr+" ) ";
 			  
 			  sql += "and d.r_id IN  ( "+segmentIdArr+" ) ";
 			  sql2 += "and d.r_id IN  ( "+segmentIdArr+" ) ";
@@ -118,7 +116,7 @@ public class EventUserDao {
 	}
 	
 	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort, String isContinuous, String dataLists ) {
-		String sql="SELECT  t1.type_name as typeName ,t1.type_code as typeCode,COALESCE(t2.nums,0) AS  num    from event_type t1  LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  , b.type_name as eventName  FROM  collection_info_new   a   LEFT JOIN   event_type b    ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE 1=1";
+		String sql="SELECT  t1.event_name_en as typeName ,t1.type_code as typeCode,COALESCE(t2.nums,0) AS  num    from event_type t1  LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  , b.type_name as eventName  FROM  collection_info_new   a   LEFT JOIN   event_type b    ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE 1=1";
 		
 		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b    LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  WHERE 1=1  ";
 		
@@ -197,7 +195,7 @@ public class EventUserDao {
 	}
 	//折线图
 	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous,String dataLists) {
-		String sql="SELECT count(*) as mycount,myhour,road_name,road_id FROM (   SELECT  a.upload_time ,b.road_name,d.r_id as road_id, date_part('hour',to_timestamp(a.upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour   FROM  collection_info_new a   left join gaosu_segment b  on a.segment_id=b.id  LEFT JOIN gaosu  d  ON b.road_id=d.road_id where 1=1";
+		String sql="SELECT count(*) as mycount,myhour,road_name,road_id FROM (   SELECT  a.upload_time ,d.en_name as road_name,d.r_id as road_id, date_part('hour',to_timestamp(a.upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour   FROM  collection_info_new a   left join gaosu_segment b  on a.segment_id=b.id  LEFT JOIN gaosu  d  ON b.road_id=d.road_id where 1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1";
 		if (!cityName.equals("") && cityName!=null) {
 			  sql += " and a.city_name =  '"+cityName+"' ";
@@ -284,10 +282,9 @@ public class EventUserDao {
 				  sql += " and a.event_type IN ( "+eventsList+" )";
 			  		}
 			  
-			  System.err.println(paramsBean.getIsContinuous());
 			  if(paramsBean.getIsContinuous().equals("true")) {
-				  if (!paramsBean.getDataListFormat()[0].equals("") && paramsBean.getDataListFormat()[0]!=null  && !paramsBean.getDataListFormat()[1].equals("") && paramsBean.getDataListFormat()[1]!=null ) {
-					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataListFormat()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataListFormat()[1]+"' ";
+				  if (!paramsBean.getDataList()[0].equals("") && paramsBean.getDataList()[0]!=null  && !paramsBean.getDataList()[1].equals("") && paramsBean.getDataList()[1]!=null ) {
+					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataList()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataList()[1]+"' ";
 				  }
 			  }else {
 				  String dataLists="";

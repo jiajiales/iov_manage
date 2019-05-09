@@ -56,61 +56,23 @@ public class HomeDao {
     /**
      * 行人热力图
      */
-    public byte[] getVRUEvent(int x,int y,int z,ParamsBean paramsBean) throws Exception{
+    public byte[] getVRUEvent(int x,int y,int z,String sDate,String eDate,String dates,String sTime,String eTime,int orderType,String road) throws Exception{
         String tile = TileUtils.parseXyz2Bound(x, y, z);
-        String roadSql = getRoadSql(paramsBean.getRoadSecList());
+        String roadSql = getRoadSql(road);
+        String dataSql = getDataSql(dates);
 
-        String roadSql2 = " (SELECT road_id FROM gaosu WHERE r_id in "+roadSql+")";
-        String dataSql = getDataSql(paramsBean.getDataList());
-        String timeSql = "  BETWEEN '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
-
-        String sql1 = "SELECT st_astext(geom) as geom,id,road_id FROM gaosu_segment a WHERE st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true"+ " AND a.road_id in"+roadSql2 ;
+        String sql1 = "SELECT st_astext(geom) as geom,id FROM gaosu_segment WHERE "+ roadSql +" AND st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true";
         List<Map<String,Object>> roadList = jdbcTemplate.queryForList(sql1);
 
-        String sql2;
-        if(paramsBean.getIsContinuous().equals("true")) {      //连续选择时间
-
-            sql2 = "with a1 as( " +
-                    "SELECT count(b.id),segment_id FROM trip_segment_new as b, gaosu_segment as a " +
-                    "WHERE b.segment_id=a.id AND a.road_id in " + roadSql2 + " AND substring(b.time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+
-                    "' AND substring(substring(b.time,12,16),1,5) " + timeSql +
-                    " GROUP BY b.segment_id " +
-                    "),a2 as("+
-                    "SELECT st_astext(a.geom) as geom,a.id,count(b.event_id) FROM gaosu_segment as a,collection_info_new as b WHERE  " +
-                    " b.event_type='01' and a.road_id in " + roadSql2 + " AND a.id=b.segment_id AND substring(b.upload_time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' " +
-                    " AND  substring(substring(b.upload_time,12,16),1,5)" + timeSql +
-                    " GROUP BY a.id,a.geom )"+
-                    "SELECT a2.geom,a2.id,a2.count*1.0/a1.count*1.0 as count FROM a1 join a2 ON a1.segment_id=a2.id WHERE 1=1";
-        }else {      //间隔选择时间
-            sql2 = "with a1 as( " +
-                    "SELECT count(b.id),segment_id FROM trip_segment_new as b, gaosu_segment as a " +
-                    "WHERE b.segment_id=a.id  AND a.road_id in" + roadSql2 + " and substring(b.time,1,10) in "+dataSql + " AND substring(substring(b.time,12,16),1,5)"+timeSql +
-                    " GROUP BY b.segment_id " +
-                    "),a2 as("+
-                    "SELECT st_astext(a.geom) as geom,a.id,count(b.event_id) FROM gaosu_segment as a,collection_info_new as b WHERE  " +
-                    " b.event_type='01' AND a.road_id in " + roadSql2 + " AND a.id=b.segment_id " +" AND substring(b.upload_time,1,10) in "+dataSql +" AND substring(substring(b.upload_time,12,16),1,5) "+ timeSql +
-                    " GROUP BY a.id,a.geom )"+
-                    "SELECT a2.geom,a2.id,a2.count*1.0/a1.count*1.0 as count FROM a1 join a2 ON a1.segment_id=a2.id WHERE 1=1";
-        }
+        String sql2 = "SELECT b.id, count(a.event_id) FROM collection_info_new as a, gaosu_segment as b WHERE ST_DWithin(st_transform(a.geom,4527), st_transform(b.geom,4527), 20) " +
+                "AND a.event_type='01' AND "+dataSql+" AND "+ dataSql +
+                " AND st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true GROUP BY b.id";
         List<Map<String,Object>> countList = jdbcTemplate.queryForList(sql2);
 
         VectorTileEncoder vte = new VectorTileEncoder(4096, 16, false);
         for (Map<String, Object> m : roadList) {
             Map<String,Object> idMap = new HashMap<>();
-            idMap.put("segment_id",idMap.get("id"));
-            idMap.put("road_id",idMap.get("rod_id"));
-
-       //     Map<String,Object> countMap = new HashMap<>();
-       //     idMap.put("count",countMap.get("id"));
-            for(int i=0; i<countList.size(); i++){
-                if(Integer.parseInt(m.get("id").toString()) == Integer.parseInt(countList.get(i).get("id").toString())){
-                    idMap.put("count",countList.get(i).get("count"));
-                    countList.remove(i);
-                }
-            }
-            if(idMap.get("count") == null){
-                idMap.put("count",0);
-            }
+            idMap.put("proporties",idMap.get("id"));
 
             String wkt = (String) m.get("geom");
 
@@ -120,6 +82,9 @@ public class HomeDao {
 
             vte.addFeature("geom", idMap, geom);
         }
+        Map<String,Object> countMap = new HashMap<>();
+        countMap.put("count",countList);
+        //vte.addFeature("count",countMap);
 
         return vte.encode();
     }
@@ -133,99 +98,120 @@ public class HomeDao {
         List<Map<String,Object>> resultList = new ArrayList<>();
         Map<String,Object> map = new HashMap<>();
 
-        String sql1 = "SELECT DISTINCT en_name FROM gaosu WHERE road_id="+ paramsBean.getRoadSecList()[0];
+        String sql1 = "SELECT road_name FROM gaosu_segment WHERE id="+paramsBean.getRoadSecList()[0];
         List<Map<String,Object>> nameMap = jdbcTemplate.queryForList(sql1);
         if(nameMap.size()!=0){
-            map.put("road",nameMap.get(0).get("en_name"));           //路名
+            map.put("road",nameMap.get(0).get("road_name"));           //路名
         }
-        String timeSql = " '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
+        String timeSql = " AND substring(a.time,12,16) BETWEEN '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
 
         String sql2 = "";
         if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
-           sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in ("+paramsBean.getSegmentId()[0]+") " +
-                   " AND substring(time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' "
-                   +" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
+           sql2 = "SELECT DISTINCT a.car_id FROM trip_rail as a, gaosu_segment as b WHERE b.id="+paramsBean.getRoadSecList()[0]+"  AND  " +
+                    "ST_DWithin(st_transform(a.geom,4527), st_transform(b.geom,4527), 20) AND substring(a.time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' " + timeSql;
         }else if(paramsBean.getIsContinuous().equals("false")){      //间隔选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in ("+paramsBean.getSegmentId()[0]+") " +
-                    " AND substring(time,1,10) in "+getDataSql(paramsBean.getDataList())+" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
+            sql2 = "SELECT DISTINCT a.car_id FROM trip_rail as a, gaosu_segment as b WHERE b.id="+paramsBean.getRoadSecList()[0]+"  AND  " +
+                    "ST_DWithin(st_transform(a.geom,4527), st_transform(b.geom,4527), 20) AND "+getDataSql2(paramsBean.getDataList())+ timeSql;
         }
         List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
-        if(carList.size()==0){
-            return null;
+        map.put("velchels",carList.size());
+
+        int times = 0;   //经过的次数
+        String sql3;
+
+        if(carList == null || carList.size()==0){         //没有车经过
+            map.put("times",carList.size());
+            resultList.add(map);
+        } else {
+            for (Map<String,Object> carId: carList){     //每辆车经过几次
+                String car_id = carId.get("car_id").toString();
+                if(paramsBean.getIsContinuous().equals("true")){
+                    sql3 = "SELECT a.time,a.lon,a.lat  FROM trip_rail as a, gaosu_segment as b WHERE b.id="+paramsBean.getRoadSecList()[0]+" AND " +
+                            "ST_DWithin(st_transform(a.geom,4527), st_transform(b.geom,4527), 20) AND car_id='"+car_id+"'  AND substring(a.time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' " + timeSql+" ORDER BY time ";
+                }else {
+                    sql3 = "SELECT a.time,a.lon,a.lat  FROM trip_rail as a, gaosu_segment as b WHERE b.id="+paramsBean.getRoadSecList()[0]+" AND " +
+                            "ST_DWithin(st_transform(a.geom,4527), st_transform(b.geom,4527), 20) AND car_id='"+car_id+"' AND "+getDataSql2(paramsBean.getDataList())+ timeSql+"ORDER BY time ";
+                }
+                List<Map<String,Object>> infoList = jdbcTemplate.queryForList(sql3);
+
+                if(infoList == null){
+                    continue;
+                } else if(infoList.size()==1){
+                    times += 1;
+                } else {
+                    times += 1;
+                    for(int i=0; i<infoList.size(); i++){             //从时间的连续性上看同一辆车经过几次
+                        String time1 = infoList.get(i).get("time").toString().substring(11,16);       //截取小时和分钟
+                        if ((i+1)<infoList.size()) {
+                            String time2 = infoList.get(i + 1).get("time").toString().substring(11, 16);
+
+                            int minute1 = Integer.parseInt(time1.substring(0, 2)) * 60 + Integer.parseInt(time1.substring(3));
+                            int minute2 = Integer.parseInt(time2.substring(0, 2)) * 60 + Integer.parseInt(time2.substring(3));
+
+                            if((minute2 - minute1)<60){      //如果是连续的一个小时内
+                                continue;
+                            } else {
+                                times += 1;
+                            }
+                        }
+                    }
+                }
+            }
+            map.put("times",times);
+            resultList.add(map);
         }
-        map.put("velchels",carList.get(0).get("count1"));
-
-        map.put("times",carList.get(0).get("count2"));
-
-        resultList.add(map);
-        return resultList;
-    }
-
-    /**
-     * 选择多个路段查看信息
-     * @param paramsBean
-     * @return
-     */
-    public List<Map<String,Object>> getMultiPointInfo(ParamsBean paramsBean){
-        List<Map<String,Object>> resultList = new ArrayList<>();
-        Map<String,Object> map = new HashMap<>();
-
-        String sql1 = "SELECT DISTINCT en_name FROM gaosu WHERE road_id="+ paramsBean.getRoadSecList()[0];
-        List<Map<String,Object>> nameMap = jdbcTemplate.queryForList(sql1);
-        if(nameMap.size()!=0){
-            map.put("road",nameMap.get(0).get("en_name"));           //路名
-        }
-        String timeSql = " '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
-
-        String sql2 = "";
-        if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
-                    " AND substring(time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' "
-                    +" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
-        }else if(paramsBean.getIsContinuous().equals("false")){      //间隔选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
-                    " AND substring(time,1,10) in "+getDataSql(paramsBean.getDataList())+" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
-        }
-        List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
-        if(carList.size()==0){
-            return resultList;
-        }
-        map.put("velchels",carList.get(0).get("count1"));
-
-        map.put("times",carList.get(0).get("count2"));
-
-        resultList.add(map);
         return resultList;
     }
 
     //选多条路
-    private String getRoadSql(Integer[] roads_id){
+    private String getRoadSql(String roads){
         String roadSql = " ";
-        for(int i=0; i<roads_id.length; i++){
-            roadSql = roadSql + roads_id[i] +",";
+        if(roads.contains(",")){
+            String road[] = roads.split(",");
+            roadSql = " en_name in (";
+            for(int i=0; i<road.length; i++){
+                roadSql = roadSql + "'" + road[i] + "'" + ",";
+            }
+            roadSql = roadSql.substring(0,roadSql.length()-1) + ")";
+        }else {
+            roadSql = " en_name in ('"+ roads + "')";
         }
-        roadSql = "("+ roadSql.substring(0,roadSql.length()-1)+")";
         return roadSql;
     }
 
     //选多个日期
-    private String getDataSql(String[] datas){
-        String dataSql = "";
-        for(int i=0; i<datas.length; i++){
-            dataSql = dataSql +"'"+datas[i]+"'"+",";
+    private String getDataSql(String datas){
+        String dataSql = " ";
+        if(datas.contains(",")){
+            String data[] = datas.split(",");
+            dataSql = " substring(a.upload_time,1,10) in (";
+            for(int i=0; i<data.length; i++){
+                dataSql = dataSql + "'" + data[i] + "'" + ",";
+            }
+            dataSql = dataSql.substring(0,dataSql.length()-1) + ")";
+        }else {
+            dataSql = " substring(a.upload_time,1,10) in ('"+ datas + "')";
         }
-        dataSql = "("+ dataSql.substring(0,dataSql.length()-1)+")";
         return dataSql;
     }
 
-    //选多个路段
-    private String getSegmentSql(Integer[] segmentId){
-        String segmentIdSql = "";
-        for(int i=0; i<segmentId.length; i++){
-            segmentIdSql = segmentIdSql +segmentId[i].toString()+",";
+    private String getDataSql2(String[] dataList){
+        String dataSql = "";
+        for(int i=0; i<dataList.length; i++){
+            dataSql = dataSql +"'"+dataList[i]+"'"+",";
         }
-        segmentIdSql = "("+ segmentIdSql.substring(0,segmentIdSql.length()-1)+")";
-        return segmentIdSql;
+        dataSql = "substring(a.time,1,10) in ("+ dataSql.substring(0,dataSql.length()-1)+")";
+//        if(datas.contains(",")){
+//            String data[] = datas.split(",");
+//            dataSql = " substring(a.time,1,10) in (";
+//            for(int i=0; i<data.length; i++){
+//                dataSql = dataSql + "'" + data[i] + "'" + ",";
+//            }
+//            dataSql = dataSql.substring(0,dataSql.length()-1) + ")";
+//        }else {
+//            dataSql = " substring(a.time,1,10) in ('"+ datas + "')";
+//        }
+        return dataSql;
     }
 
     //路段信息
