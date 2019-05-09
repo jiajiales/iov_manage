@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -174,13 +175,25 @@ public class EventHeatController {
      */
     @ResponseBody
     @RequestMapping("/eventAggregateFigure")
-    public Object eventAggregateFigure(String cityName, Integer eventId, String date, String time){
+    public Object eventAggregateFigure(@RequestBody String jsonData){
         try {
+        	JSONObject json = JSONObject.fromObject(jsonData);
+        	String city = json.getString("city"); 
+        	JSONArray dateList = json.getJSONArray("dataList");
+        	JSONArray eventsList = json.getJSONArray("eventsList");
+        	JSONArray roadSecList = json.getJSONArray("roadSecList");
+        	String isContinuous = json.getString("isContinuous");
+        	//String sort = json.getString("sort");
+        	JSONArray timeFrame = json.getJSONArray("timeFrame");
+        	
         	Map<String, Object> paramMap = new HashMap<String, Object>();
-        	paramMap.put("cityName", cityName);
-        	paramMap.put("eventId", eventId);
-        	paramMap.put("date", date);
-        	paramMap.put("time", time);
+        	paramMap.put("city", city);
+        	paramMap.put("dateList", dateList);
+        	paramMap.put("eventsList", eventsList);
+        	paramMap.put("roadSecList", roadSecList);
+        	paramMap.put("isContinuous", isContinuous);
+        	//paramMap.put("sort", sort);
+        	paramMap.put("timeFrame", timeFrame);
     		Map<String, Object> geojson = eventHeatService.eventAggregateFigure(paramMap);
     		return geojson;
         } catch (Exception e) {
