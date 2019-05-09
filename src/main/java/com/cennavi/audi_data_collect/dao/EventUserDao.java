@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.ParamsBean;
 @Component
 public class EventUserDao {
 	 @Autowired
@@ -89,45 +90,26 @@ public class EventUserDao {
 		 double k=jdbcTemplate.queryForObject(sql2,double.class);  //获取总数
 		 System.out.println("k:"+k);
 		 List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
-		 List< Map<String,Object>> queryForList3 = new ArrayList<Map<String,Object>>();
-		  for (int i=0; i<24;i++) {
-			  Map map1 = new HashMap();
-				 map1.put("percentage", 0);
-				 map1.put("myhour", i );
-				 map1.put("mycount", 0);
-				 queryForList3.add(map1);
-		}
-		
-		 for (Map<String, Object> map : queryForList3) {
-			 for (String s : map.keySet()) {
-				 if(s.equals("myhour")){
-					 for (Map<String, Object> map2 : queryForList) {
-						 for (String s2 : map2.keySet()) {
-								 
-								 if(map.get("myhour").toString().equals(map2.get("myhour").toString())){
-								 	    map.put("mycount", map2.get("mycount"));
-								 	   double a=Integer.parseInt(map2.get("mycount").toString());
-										 double n=(double)Math.round(a/k*10000)/100;
-										 if(n==100.00) {//如果为100 就转成99.99方便前端展示
-											 n=99.99;
-										 }
-										 map.put("percentage",  n);   //添加百分比数据
-							 }
-							 
+		  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+		  for (Map<String, Object> map : queryForList) {
+			  Map<String, Object> map2=  new HashMap<String, Object>();
+				 for (String s : map.keySet()) {
+					 map2.put(s, map.get(s));
+					 if(s.equals("mycount")) {
+						 double a=Integer.parseInt(map.get(s).toString());
+						 double n=(double)Math.round(a/k*10000)/100;
+						 if(n==100.00) {
+							 n=99.99;
 						 }
-						 }
-				 }
+						 map2.put("percentage",  n);
+					 }
+		            }
 				 
-				
-						  
-				 
-			 }
-			
+				 queryForList2.add(map2);
 		}
-		 System.err.println(queryForList3);
 		 JSONObject json;
 		 JSONArray jsonArray = new JSONArray();
-		 for (Map<String, Object> map : queryForList3) {//将map转成json格式
+		 for (Map<String, Object> map : queryForList2) {//将map转成json格式
 			   json =new JSONObject(map);
 			   jsonArray.add(json);
 		}
@@ -283,38 +265,57 @@ public class EventUserDao {
 		  
 	return jsonArray;
 	}
-	public List<CVSBean> exportCsv(String cityName, String eventType, String startTime, String endTime, String roadSecList,
-			String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) throws ParseException {
+	 
+	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
 		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,16) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
-		if (!cityName.equals("") && cityName!=null) {
-			  sql += " and a.city_name =  '"+cityName+"' ";
-		  		}
-//		  if (!eventType.equals("") && eventType!=null) {
-//			  sql += " and a.event_type =  '"+eventType+"' ";
-//		  		}
-		  if (!eventType.equals("") && eventType!=null) {
-			  sql += " and a.event_type IN ( "+eventType+" )";
-		  		}
-		  
-		  if(isContinuous.equals("true")) {  //判断时间是否连续
-			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-				  
-				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-			  }
-		  }else {
-			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-		  }
-		  
-		  
-		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-			  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
-		  }
-		 
-		  if ( !roadSecList.equals("") &&roadSecList!=null) {
-			  sql += "and d.r_id IN  ( "+roadSecList+" ) ";
-		  		}
-		  
 		
+		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
+				  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
+				 
+			  		}
+			  if (paramsBean.getEventsList().length>0 && paramsBean.getEventsList()!=null) {
+				  String eventsList="";
+				  for (int i=0;i<paramsBean.getEventsList().length;i++) {
+					  eventsList=eventsList+"'"+paramsBean.getEventsList()[i]+"',";
+				}
+				  if(eventsList.length()>0) {
+					  eventsList= eventsList.substring(0,eventsList.length()-1);
+				  }
+				  sql += " and a.event_type IN ( "+eventsList+" )";
+			  		}
+			  
+			  if(paramsBean.getIsContinuous().equals("true")) {
+				  if (!paramsBean.getDataListFormat()[0].equals("") && paramsBean.getDataListFormat()[0]!=null  && !paramsBean.getDataListFormat()[1].equals("") && paramsBean.getDataListFormat()[1]!=null ) {
+					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataListFormat()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataListFormat()[1]+"' ";
+				  }
+			  }else {
+				  String dataLists="";
+				  for (int i=0;i<paramsBean.getDataList().length;i++) {
+					dataLists=dataLists+"'"+paramsBean.getDataList()[i]+"',";
+				}
+				  if(dataLists.length()>0) {
+				  dataLists= dataLists.substring(0,dataLists.length()-1);
+				  }
+				  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+			  }
+			 
+			  
+			  if (!paramsBean.getTimeFrame()[0].equals("") && paramsBean.getTimeFrame()[0]!=null  && !paramsBean.getTimeFrame()[1].equals("") && paramsBean.getTimeFrame()[1]!=null ) {
+				  sql  += " and substring(a.upload_time,12,16)>= '"+paramsBean.getTimeFrame()[0]+"' and substring(a.upload_time,12,16)<= '"+paramsBean.getTimeFrame()[1]+"'";
+
+			  }
+			  
+			  if ( paramsBean.getRoadSecList().length>0 && paramsBean.getRoadSecList()!=null) {
+				  
+				  String roadSecList="";
+				  for (int i=0;i<paramsBean.getRoadSecList().length;i++) {
+					  roadSecList=roadSecList+"'"+paramsBean.getRoadSecList()[i]+"',";
+				}
+				  if(roadSecList.length()>0) {
+					  roadSecList= roadSecList.substring(0,roadSecList.length()-1);
+				  }
+				  sql += "and d.r_id IN  ( "+roadSecList+" ) ";
+			  		}
 		  System.err.println("sql:"+sql);
 		  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 			List<CVSBean> list =new ArrayList() ;
@@ -336,14 +337,12 @@ public class EventUserDao {
 					    Date date = inSDF.parse(map.get(k).toString());
 			            outDate = outSDF.format(date);
 			            cVSBean.setDate(outDate);
-//					   cVSBean.setDate(map.get(k).toString());
 				   }   
 				   if(k.equals("time")){
 					   String outHour = "";
 					    Date date = inSDFH.parse(map.get(k).toString());
 			            outHour = outSDFH.format(date);
 			            cVSBean.setTime(outHour);
-//					   cVSBean.setTime(map.get(k).toString());
 				   }   
 	  
 		      }
@@ -351,47 +350,6 @@ public class EventUserDao {
 			   
 		}
 			return list;
-	}
-	public List<CVSBean> exportTestCsv() throws ParseException {
-		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,16) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
-String sql3="		 SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,16) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1   and a.city_name =  '北京'  and a.event_type =  '01' AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ('2019-04-08','2019-04-09') ) and substring(a.upload_time,12,16)>= '1' and substring(a.upload_time,12,16)<= '23'  ";
-		String sql2=" SELECT  a.event_id,b.type_name,d.name,substring(a.upload_time,1,10) AS data, substring(a.upload_time,12,16) AS HOUR    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  and a.city_name =  '北京'  and a.event_type =  '01' AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ('2019-04-08','2019-04-09') ) and substring(a.upload_time,12,16)>= '1' and substring(a.upload_time,12,16)<= '23' ";
-		
-		String sql4=" SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,16) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1   and a.city_name =  '北京'  and a.event_type =  '01' AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ('2019-04-08','2019-04-09') ) and substring(a.upload_time,12,16)>= '1' and substring(a.upload_time,12,16)<= '23' ";
-		List<CVSBean> list =new ArrayList() ;
-		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql4);
-	  for (Map<String, Object> map : queryForList) {   //将数据转换成json格式
-		  CVSBean cVSBean =new CVSBean();
-		  for (String k : map.keySet())
-	      {
-			   if(k.equals("event_id")){
-				   cVSBean.setEvent_id((Integer) map.get(k));
-			   }   
-			   if(k.equals("type_name")  ){
-				   cVSBean.setType_name(map.get(k).toString());
-			   }   
-			   if(k.equals("road_name")){
-				   cVSBean.setRoad_name(map.get(k).toString());
-			   }   
-			   if(k.equals("date")){  //将2019-04-08  转成  08/04/2019
-				   String outDate = "";
-				    Date date = inSDF.parse(map.get(k).toString());
-		            outDate = outSDF.format(date);
-		            cVSBean.setDate(outDate);
-
-			   }   
-			   if(k.equals("time")){  //将14:15:09  转为14/15/09
-				   String outHour = "";   
-				    Date date = inSDFH.parse(map.get(k).toString());
-		            outHour = outSDFH.format(date);
-		            cVSBean.setTime(outHour);
-			   }   
-  
-	      }
-		  list.add(cVSBean);
-		   
-	}
-		return list;
 	}
 
 }
