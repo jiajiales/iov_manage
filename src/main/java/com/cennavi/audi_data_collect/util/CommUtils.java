@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.alibaba.fastjson.JSON;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * 公共变量存放工具
@@ -89,12 +91,14 @@ public class CommUtils {
 			Iterator<Entry<String, Object>> it = m.entrySet().iterator();
 			while (it.hasNext()) {
 				Entry<String, Object> en = it.next();
-				if (!"geojson".equals(en.getKey())) {
+				if (!"wkt".equals(en.getKey())) {
 					properties.put(en.getKey(), en.getValue());
 				}
 			}
 			feature.put("properties", properties);
-			feature.put("geometry", JSON.parse(m.get("geojson").toString()));
+			//feature.put("geometry", JSON.parse(m.get("geojson").toString()));
+			Coordinate cs = new WKTReader().read(m.get("wkt").toString()).getCoordinates()[0];
+			feature.put("geometry", JSON.parse("{\"coordinates\":["+cs.x+","+cs.y+"],\"type\":\"Point\"}"));
 			features.add(feature);
 
 		}
