@@ -7,7 +7,7 @@ server:
 spring:
   datasource :
       driver-class-name : org.postgresql.Driver
-      url : jdbc:postgresql://36.111.83.14:5442/audi_data
+      url : jdbc:postgresql://117.51.149.90:8001/audi_data
       username : postgres
       password : superman
 
