@@ -45,7 +45,7 @@ public class EventUserDao {
 	//直方图
 	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
 		
-		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , substring(upload_time,12,2) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
+		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
 		String sql2="SELECT count(event_id) as num   FROM collection_info_new a LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE  1=1";
 		 
 		if (!cityName.equals("") && cityName!=null) {
@@ -75,8 +75,6 @@ public class EventUserDao {
 			  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
 		  }
 		  if ( !segmentIdArr.equals("") &&segmentIdArr!=null) {
-//			  sql += " and a.segment_id IN ( "+segmentIdArr+" ) ";
-//			  sql2 += " and a.segment_id IN ( "+segmentIdArr+" ) ";
 			  
 			  sql += "and d.r_id IN  ( "+segmentIdArr+" ) ";
 			  sql2 += "and d.r_id IN  ( "+segmentIdArr+" ) ";
@@ -285,8 +283,8 @@ public class EventUserDao {
 			  		}
 			  
 			  if(paramsBean.getIsContinuous().equals("true")) {
-				  if (!paramsBean.getDataListFormat()[0].equals("") && paramsBean.getDataListFormat()[0]!=null  && !paramsBean.getDataListFormat()[1].equals("") && paramsBean.getDataListFormat()[1]!=null ) {
-					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataListFormat()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataListFormat()[1]+"' ";
+				  if (!paramsBean.getDataList()[0].equals("") && paramsBean.getDataList()[0]!=null  && !paramsBean.getDataList()[1].equals("") && paramsBean.getDataList()[1]!=null ) {
+					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataList()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataList()[1]+"' ";
 				  }
 			  }else {
 				  String dataLists="";
@@ -332,13 +330,13 @@ public class EventUserDao {
 				   if(k.equals("road_name")){
 					   cVSBean.setRoad_name(map.get(k).toString());
 				   }   
-				   if(k.equals("date")){
+				   if(k.equals("date")){  //日期格式转换
 					   String outDate = "";
 					    Date date = inSDF.parse(map.get(k).toString());
 			            outDate = outSDF.format(date);
 			            cVSBean.setDate(outDate);
 				   }   
-				   if(k.equals("time")){
+				   if(k.equals("time")){//时间格式转换
 					   String outHour = "";
 					    Date date = inSDFH.parse(map.get(k).toString());
 			            outHour = outSDFH.format(date);
