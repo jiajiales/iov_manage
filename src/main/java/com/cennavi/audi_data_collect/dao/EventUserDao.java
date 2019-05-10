@@ -290,6 +290,7 @@ public class EventUserDao {
 				  }
 				  
 			  }else {
+				  if(paramsBean.getDataList().length>0) {
 				  String dataLists="";
 				  for (int i=0;i<paramsBean.getDataList().length;i++) {
 					dataLists=dataLists+"'"+paramsBean.getDataList()[i]+"',";
@@ -298,6 +299,7 @@ public class EventUserDao {
 				  dataLists= dataLists.substring(0,dataLists.length()-1);
 				  }
 				  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+				  }
 			  }
 			  if(paramsBean.getTimeFrame().length>0) {
 			  
