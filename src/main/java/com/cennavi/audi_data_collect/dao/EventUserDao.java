@@ -71,8 +71,8 @@ public class EventUserDao {
 
 		  }
 		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-			  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
-			  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
+			  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
+			  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
 		  }
 		  if ( !segmentIdArr.equals("") &&segmentIdArr!=null) {
 			  
@@ -145,8 +145,8 @@ public class EventUserDao {
 			 
 			  
 			  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-				  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
-				  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
+				  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
+				  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
 
 			  }
 			  
@@ -221,8 +221,8 @@ public class EventUserDao {
 		  
 		  
 		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-			  sql  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
-			  sql2  += " and substring(a.upload_time,12,16)>= '"+startTimeFrames+"' and substring(a.upload_time,12,16)<= '"+endTimeFrames+"'";
+			  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
+			  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
 		  }
 		 
 		  if ( !segmentIds.equals("") &&segmentIds!=null) {
@@ -265,7 +265,7 @@ public class EventUserDao {
 	}
 	 
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
-		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,16) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
+		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,5) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
 		
 		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
 				  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
@@ -299,7 +299,7 @@ public class EventUserDao {
 			 
 			  
 			  if (!paramsBean.getTimeFrame()[0].equals("") && paramsBean.getTimeFrame()[0]!=null  && !paramsBean.getTimeFrame()[1].equals("") && paramsBean.getTimeFrame()[1]!=null ) {
-				  sql  += " and substring(a.upload_time,12,16)>= '"+paramsBean.getTimeFrame()[0]+"' and substring(a.upload_time,12,16)<= '"+paramsBean.getTimeFrame()[1]+"'";
+				  sql  += " and substring(a.upload_time,12,5)>= '"+paramsBean.getTimeFrame()[0]+"' and substring(a.upload_time,12,5)<= '"+paramsBean.getTimeFrame()[1]+"'";
 
 			  }
 			  
