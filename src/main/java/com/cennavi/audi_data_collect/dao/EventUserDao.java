@@ -36,7 +36,7 @@ public class EventUserDao {
 		}
 		return false;
 	}
-	//类型列表
+	//类型列表sss
 	public Object queryEventType() {
 		 String sql="select * from  event_type  ";
 			return  jdbcTemplate.queryForList(sql);
