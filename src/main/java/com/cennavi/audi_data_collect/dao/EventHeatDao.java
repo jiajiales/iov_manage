@@ -75,7 +75,7 @@ public class EventHeatDao {
 			JSONArray eventsList = (JSONArray)map.get("eventsList");
 			String es = "(";
 			for(int i=0;i<eventsList.size();i++) {
-				es += "'" + eventsList.get(i) + "',";
+				if(!eventsList.get(i).toString().equals("01"))es += "'" + eventsList.get(i) + "',";
 			}
 			es = es.substring(0, es.length()-1) + ")";
 			if(eventsList.size()>0)sql += " and c.event_type in " + es;
