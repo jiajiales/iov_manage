@@ -36,7 +36,7 @@ public class EventUserDao {
 		}
 		return false;
 	}
-	//类型列表sss
+	//类型列表
 	public Object queryEventType() {
 		 String sql="select * from  event_type  ";
 			return  jdbcTemplate.queryForList(sql);
@@ -266,7 +266,7 @@ public class EventUserDao {
 	}
 	 
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
-		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,7) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
+		String sql="SELECT  a.event_id,COALESCE(b.event_name_en, '0') as type_name,d.en_name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,7) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
 		System.err.println("city:"+paramsBean.getCity());
 		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
 				  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
