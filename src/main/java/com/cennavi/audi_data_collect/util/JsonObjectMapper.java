@@ -1,4 +1,4 @@
-package com.cennavi.audi_data_collect.util;
+package com.cennavi.framework;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -100,8 +100,108 @@ public class HomeDao {
             idMap.put("segment_id",idMap.get("id"));
             idMap.put("road_id",idMap.get("rod_id"));
 
-       //     Map<String,Object> countMap = new HashMap<>();
-       //     idMap.put("count",countMap.get("id"));
+            for(int i=0; i<countList.size(); i++){
+                if(Integer.parseInt(m.get("id").toString()) == Integer.parseInt(countList.get(i).get("id").toString())){
+                    idMap.put("count",countList.get(i).get("count"));
+                    countList.remove(i);
+                }
+            }
+            if(idMap.get("count") == null){
+                idMap.put("count",0);
+            }
+
+            String wkt = (String) m.get("geom");
+
+            Geometry geom = new WKTReader().read(wkt);
+
+            TileUtils.convert2Piexl(x, y, z, geom);
+
+            vte.addFeature("geom", idMap, geom);
+        }
+
+        return vte.encode();
+    }
+
+    private String getSql1(String roads){
+        String roadSql = " ";
+        if(roads.contains(",")){
+            String roadArray[]=roads.split(",");
+            roadSql=" (";
+            for(int i=0;i<roadArray.length;i++){
+                roadSql=roadSql+"'"+roadArray[i]+"'"+",";
+            }
+            roadSql = roadSql.substring(0,roadSql.length()-1)+")";
+        }else{
+            roadSql=" ('"+roads+"')";
+        }
+
+        return roadSql;
+    }
+
+    private String getSql2(String roads){
+        String roadSql = " ";
+        if(roads.contains(",")){
+            String roadArray[]=roads.split(",");
+            roadSql=" (";
+            for(int i=0;i<roadArray.length;i++){
+                roadSql=roadSql +roadArray[i]+",";
+            }
+            roadSql = roadSql.substring(0,roadSql.length()-1)+")";
+        }else{
+            roadSql=" ( "+roads+" )";
+        }
+
+        return roadSql;
+    }
+
+    public byte[] getVRUEventNew(int x,int y,int z,String city,String eventsList,String dataList,String dataListFormat,String roadSecList,
+                                 String timeFrame,String isContinuous) throws Exception{
+        String tile = TileUtils.parseXyz2Bound(x, y, z);
+        String roadSql = getSql2(roadSecList);
+
+        String roadSql2 = " (SELECT road_id FROM gaosu WHERE r_id in "+roadSql+")";
+        String dataSql = getSql1(dataList);
+        String times[] = timeFrame.split(",");
+        String datas[] = dataList.split(",");
+
+        String timeSql = "  BETWEEN '"+times[0]+"' AND '"+times[1]+"'";
+
+        String sql1 = "SELECT st_astext(geom) as geom,id,road_id FROM gaosu_segment a WHERE st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true"+ " AND a.road_id in"+roadSql2 ;
+        List<Map<String,Object>> roadList = jdbcTemplate.queryForList(sql1);
+
+        String sql2 = "";
+        if(isContinuous.equals("true")) {      //连续选择时间
+
+            sql2 = "with a1 as( " +
+                    "SELECT count(b.id),segment_id FROM trip_segment_new as b, gaosu_segment as a " +
+                    "WHERE b.segment_id=a.id AND a.road_id in " + roadSql2 + " AND substring(b.time,1,10) BETWEEN '"+datas[0]+"' AND '"+datas[1]+
+                    "' AND substring(substring(b.time,12,16),1,5) " + timeSql +
+                    " GROUP BY b.segment_id " +
+                    "),a2 as("+
+                    "SELECT st_astext(a.geom) as geom,a.id,count(b.event_id) FROM gaosu_segment as a,collection_info_new as b WHERE  " +
+                    " b.event_type='01' and a.road_id in " + roadSql2 + " AND a.id=b.segment_id AND substring(b.upload_time,1,10) BETWEEN '"+datas[0]+"' AND '"+datas[1]+"' " +
+                    " AND  substring(substring(b.upload_time,12,16),1,5)" + timeSql +
+                    " GROUP BY a.id,a.geom )"+
+                    "SELECT a2.geom,a2.id,a2.count*1.0/a1.count*1.0 as count FROM a1 join a2 ON a1.segment_id=a2.id WHERE 1=1";
+        }else {      //间隔选择时间
+            sql2 = "with a1 as( " +
+                    "SELECT count(b.id),segment_id FROM trip_segment_new as b, gaosu_segment as a " +
+                    "WHERE b.segment_id=a.id  AND a.road_id in" + roadSql2 + " and substring(b.time,1,10) in "+dataSql + " AND substring(substring(b.time,12,16),1,5)"+timeSql +
+                    " GROUP BY b.segment_id " +
+                    "),a2 as("+
+                    "SELECT st_astext(a.geom) as geom,a.id,count(b.event_id) FROM gaosu_segment as a,collection_info_new as b WHERE  " +
+                    " b.event_type='01' AND a.road_id in " + roadSql2 + " AND a.id=b.segment_id " +" AND substring(b.upload_time,1,10) in "+dataSql +" AND substring(substring(b.upload_time,12,16),1,5) "+ timeSql +
+                    " GROUP BY a.id,a.geom )"+
+                    "SELECT a2.geom,a2.id,a2.count*1.0/a1.count*1.0 as count FROM a1 join a2 ON a1.segment_id=a2.id WHERE 1=1";
+        }
+        List<Map<String,Object>> countList = jdbcTemplate.queryForList(sql2);
+
+        VectorTileEncoder vte = new VectorTileEncoder(4096, 16, false);
+        for (Map<String, Object> m : roadList) {
+            Map<String,Object> idMap = new HashMap<>();
+            idMap.put("segment_id",idMap.get("id"));
+            idMap.put("road_id",idMap.get("rod_id"));
+
             for(int i=0; i<countList.size(); i++){
                 if(Integer.parseInt(m.get("id").toString()) == Integer.parseInt(countList.get(i).get("id").toString())){
                     idMap.put("count",countList.get(i).get("count"));

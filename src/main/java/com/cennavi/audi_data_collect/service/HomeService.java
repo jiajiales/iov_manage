@@ -17,8 +17,9 @@ public class HomeService {
     @Autowired
     private HomeDao homeDao;
 
-    public byte[] getVRUEvent(int x,int y,int z,ParamsBean paramsBean) throws Exception{
-        return homeDao.getVRUEvent(x,y,z,paramsBean );
+    public byte[] getVRUEvent(int x,int y,int z,String city,String eventsList,String dataList,String dataListFormat,String roadSecList,
+                              String timeFrame,String isContinuous) throws Exception{
+        return homeDao.getVRUEventNew(x,y,z,city,eventsList,dataList,dataListFormat,roadSecList,timeFrame,isContinuous);
     }
 
     public byte[] getSegmentId(int x,int y,int z) throws Exception{

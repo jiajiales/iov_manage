@@ -77,25 +77,21 @@ public class HomeController {
         }
         return null;
     }*/
-    @RequestMapping(value = "/getVRUEvent/{x}/{y}/{z}/{params}", produces = "application/x-protobuf")
+    @RequestMapping(value = "/getVRUEvent/{x}/{y}/{z}", produces = "application/x-protobuf")
     public String getVRUEvent(@PathVariable("x") int x , @PathVariable("y") int y , @PathVariable("z") int z ,
-                              @PathVariable("params") String params , HttpServletResponse response){
+                              String city,String eventsList,String dataList,String dataListFormat,String roadSecList,
+                              String timeFrame,String isContinuous,  HttpServletResponse response){
 
         try{
-            String paramBody = URLDecoder.decode(params, "utf-8");
-            //JSONObject json = JSONObject.parseObject(paramBody);
 
-            ParamsBean paramsBean = (ParamsBean) JsonUtil.toObject(paramBody,ParamsBean.class);
+           // ParamsBean paramsBean = (ParamsBean) JsonUtil.toObject(paramBody,ParamsBean.class);
             String event="";
 
-            for(int i=0; i<paramsBean.getEventsList().length; i++){
-                event = event + paramsBean.getEventsList()[i].toString()+",";
-            }
-            if(event.contains("01")){
+            if(eventsList.contains("01")){
             }else {
                 return null;
             }
-            byte[] result = homeService.getVRUEvent(x,y,z,paramsBean);
+            byte[] result = homeService.getVRUEvent(x,y,z,city,eventsList,dataList,dataListFormat,roadSecList,timeFrame,isContinuous);
             if(result != null && result.length > 0){
                 response.getOutputStream().write(result);
             }
