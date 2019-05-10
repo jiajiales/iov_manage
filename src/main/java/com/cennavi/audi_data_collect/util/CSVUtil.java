@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -81,7 +79,8 @@ public class CSVUtil {
             response.setContentType("application/csv");
 //            SimpleDateFormat fdate=new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
 //            String trueCSVName=fdate.format(new Date())+".csv"; 
-            String trueCSVName="导出数据.csv";
+           
+            String trueCSVName=" Event_Data.csv";
             response.setHeader("Content-Disposition", "attachment;  filename="+ new String(trueCSVName.getBytes("GBK"), "ISO8859-1")); 
             long fileLength = fileLoad.length();
             String length1 = String.valueOf(fileLength);
