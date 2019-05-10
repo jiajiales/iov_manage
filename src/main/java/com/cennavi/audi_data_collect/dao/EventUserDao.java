@@ -265,8 +265,8 @@ public class EventUserDao {
 	}
 	 
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
-		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,5) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
-		
+		String sql="SELECT  a.event_id,COALESCE(b.type_name, '0') as type_name,d.name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,7) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
+		System.err.println("city:"+paramsBean.getCity());
 		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
 				  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
 				 
@@ -283,9 +283,12 @@ public class EventUserDao {
 			  		}
 			  
 			  if(paramsBean.getIsContinuous().equals("true")) {
-				  if (!paramsBean.getDataList()[0].equals("") && paramsBean.getDataList()[0]!=null  && !paramsBean.getDataList()[1].equals("") && paramsBean.getDataList()[1]!=null ) {
-					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataList()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataList()[1]+"' ";
+				  if(paramsBean.getDataList().length>0) {
+					  if (!paramsBean.getDataList()[0].equals("") && paramsBean.getDataList()[0]!=null  && !paramsBean.getDataList()[1].equals("") && paramsBean.getDataList()[1]!=null ) {
+						  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+paramsBean.getDataList()[0]+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+paramsBean.getDataList()[1]+"' ";
+					  }
 				  }
+				  
 			  }else {
 				  String dataLists="";
 				  for (int i=0;i<paramsBean.getDataList().length;i++) {
@@ -296,12 +299,12 @@ public class EventUserDao {
 				  }
 				  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
 			  }
-			 
+			  if(paramsBean.getTimeFrame().length>0) {
 			  
 			  if (!paramsBean.getTimeFrame()[0].equals("") && paramsBean.getTimeFrame()[0]!=null  && !paramsBean.getTimeFrame()[1].equals("") && paramsBean.getTimeFrame()[1]!=null ) {
 				  sql  += " and substring(a.upload_time,12,5)>= '"+paramsBean.getTimeFrame()[0]+"' and substring(a.upload_time,12,5)<= '"+paramsBean.getTimeFrame()[1]+"'";
 
-			  }
+			  }}
 			  
 			  if ( paramsBean.getRoadSecList().length>0 && paramsBean.getRoadSecList()!=null) {
 				  
