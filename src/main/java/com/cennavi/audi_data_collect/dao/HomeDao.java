@@ -2,6 +2,7 @@ package com.cennavi.audi_data_collect.dao;
 
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.util.TileUtils;
 import com.vividsolutions.jts.geom.Geometry;
@@ -199,12 +200,12 @@ public class HomeDao {
         VectorTileEncoder vte = new VectorTileEncoder(4096, 16, false);
         for (Map<String, Object> m : roadList) {
             Map<String,Object> idMap = new HashMap<>();
-            idMap.put("segment_id",idMap.get("id"));
-            idMap.put("road_id",idMap.get("rod_id"));
+            idMap.put("segment_id",m.get("id"));
+            idMap.put("road_id",m.get("rod_id"));
 
             for(int i=0; i<countList.size(); i++){
                 if(Integer.parseInt(m.get("id").toString()) == Integer.parseInt(countList.get(i).get("id").toString())){
-                    idMap.put("count",countList.get(i).get("count"));
+                    idMap.put("count",Double.parseDouble(countList.get(i).get("count").toString()));
                     countList.remove(i);
                 }
             }
@@ -232,7 +233,7 @@ public class HomeDao {
     public List<Map<String,Object>> getPointInfo(ParamsBean paramsBean){
         List<Map<String,Object>> resultList = new ArrayList<>();
         Map<String,Object> map = new HashMap<>();
-
+        Integer[] segmentId = paramsBean.getSegmentId();
         String sql1 = "SELECT DISTINCT en_name FROM gaosu WHERE road_id="+ paramsBean.getRoadSecList()[0];
         List<Map<String,Object>> nameMap = jdbcTemplate.queryForList(sql1);
         if(nameMap.size()!=0){
@@ -242,20 +243,20 @@ public class HomeDao {
 
         String sql2 = "";
         if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
-           sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+paramsBean.getSegmentId()[0]+
+           sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
                    " AND substring(time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' "
                    +" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
         }else if(paramsBean.getIsContinuous().equals("false")){      //间隔选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+paramsBean.getSegmentId()[0] +
+            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
                     " AND substring(time,1,10) in "+getDataSql(paramsBean.getDataList())+" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
         }
         List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
         if(carList.size()==0){
             return null;
         }
-        map.put("velchels",carList.get(0).get("count1"));
+        map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
 
-        map.put("times",carList.get(0).get("count2"));
+        map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
 
         resultList.add(map);
         return resultList;
@@ -266,9 +267,33 @@ public class HomeDao {
      * @param paramsBean
      * @return
      */
-    public List<Map<String,Object>> getMultiPointInfo(ParamsBean paramsBean){
-        List<Map<String,Object>> resultList = new ArrayList<>();
+    public Map<String,Object> getMultiPointInfo(ParamsBean paramsBean) throws Exception{
+        Map<String,Object> resultList = new HashMap<>();
         Map<String,Object> map = new HashMap<>();
+        Integer[] segmentId = paramsBean.getSegmentId();
+        int temp;
+        if(segmentId[0]>segmentId[1]){
+            temp = segmentId[0];
+            segmentId[0] = segmentId[1];
+            segmentId[1] = temp;
+        }
+
+        String sql3 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE id BETWEEN "+segmentId[0]+ " AND " +segmentId[1];
+        List<Map<String,Object>> geomList = jdbcTemplate.queryForList(sql3);
+        Map<String,Object> map1 = new HashMap<>();
+        map1.put("type","FeatureCollection");
+        List<Object> tempList = new ArrayList<>();
+
+        for(int i=0; i<geomList.size(); i++){
+            Map<String,Object> tempMap = new HashMap<>();
+            tempMap.put("type","Feature");
+            JSONObject jsStr = JSONObject.parseObject(geomList.get(i).get("geom").toString());
+            tempMap.put("geometry", jsStr);
+
+            tempList.add(tempMap);
+        }
+        map1.put("features",tempList);
+
 
         String sql1 = "SELECT DISTINCT en_name FROM gaosu WHERE road_id="+ paramsBean.getRoadSecList()[0];
         List<Map<String,Object>> nameMap = jdbcTemplate.queryForList(sql1);
@@ -279,24 +304,26 @@ public class HomeDao {
 
         String sql2 = "";
         if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
+            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id BETWEEN "+segmentId[0]+ " AND " +segmentId[1]+
                     " AND substring(time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' "
                     +" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
         }else if(paramsBean.getIsContinuous().equals("false")){      //间隔选择时间
-            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id in "+getSegmentSql(paramsBean.getSegmentId())+
+            sql2 = "SELECT count(DISTINCT car_id) as count1,count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id BETWEEN "+segmentId[0]+ " AND " +segmentId[1]+
                     " AND substring(time,1,10) in "+getDataSql(paramsBean.getDataList())+" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
         }
         List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
         if(carList.size()==0){
             return resultList;
         }
-        map.put("velchels",carList.get(0).get("count1"));
+        map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
 
-        map.put("times",carList.get(0).get("count2"));
+        map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
 
-        resultList.add(map);
+        resultList.put("data",map);
+        resultList.put("geojson",map1);
         return resultList;
     }
+
 
     //选多条路
     private String getRoadSql(Integer[] roads_id){
@@ -328,6 +355,56 @@ public class HomeDao {
         return segmentIdSql;
     }
 
-    //路段信息
+    /**
+     * 车辆经过热力图
+     */
+    public Map<String,Object> getTimesHeat(ParamsBean paramsBean){
+       // List<Map<String,Object>> resultList = new ArrayList<>();
+        String timeSql = " '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
+        String sql1 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE road_id in (SELECT road_id FROM gaosu WHERE r_id in  "+ getRoadSql(paramsBean.getRoadSecList())+" )";
+
+        List<Map<String,Object>> segmentList = jdbcTemplate.queryForList(sql1);
+        if(segmentList.size()==0){
+            return null;
+        }
+
+        String sql2 = "SELECT DISTINCT id FROM gaosu_segment WHERE road_id in (SELECT road_id FROM gaosu where r_id in "+ getRoadSql(paramsBean.getRoadSecList())+" )";
+
+        String sql3 = "";
+        if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
+            sql3 = "SELECT count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id IN ("+sql2+
+                    " ) AND substring(time,1,10) BETWEEN '"+paramsBean.getDataList()[0]+"' AND '"+paramsBean.getDataList()[1]+"' "
+                    +" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
+        }else if(paramsBean.getIsContinuous().equals("false")){      //间隔选择时间
+            sql3 = "SELECT count(DISTINCT id) as count2,segment_id FROM trip_segment_new WHERE segment_id IN ("+sql2+
+                    " ) AND substring(time,1,10) in "+getDataSql(paramsBean.getDataList())+" AND substring(substring(time,12,16),1,5) BETWEEN "+ timeSql+" GROUP BY segment_id";
+        }
+        List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql3);     //车经过几次
+
+        Map<String,Object> map = new HashMap<>();
+        map.put("type","FeatureCollection");
+        List<Object> tempList = new ArrayList<>();
+        for(int i=0; i<segmentList.size(); i++){
+            Map<String,Object> tempMap = new HashMap<>();
+            tempMap.put("type","Feature");
+            JSONObject jsStr = JSONObject.parseObject(segmentList.get(i).get("geom").toString());
+            tempMap.put("geometry", jsStr);
+            Map<String,Object> tempMap2 = new HashMap<>();
+            for(int j=0; j<carList.size(); j++){
+                if(segmentList.get(i).get("id").equals(carList.get(j).get("segment_id"))){
+                    tempMap2.put("flow",Integer.parseInt(carList.get(j).get("count2").toString()));
+                    tempMap2.put("direction",1);
+                }
+            }
+            if(tempMap2.get("flow")==null){
+                tempMap2.put("flow",0);
+                tempMap2.put("direction",1);
+            }
+            tempMap.put("properties",tempMap2);
+            tempList.add(tempMap);
+        }
+        map.put("features",tempList);
+        return map;
+    }
 
 }

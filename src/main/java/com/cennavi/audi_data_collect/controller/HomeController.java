@@ -41,7 +41,7 @@ public class HomeController {
      * 返回全部路段的id
      */
     @RequestMapping(value = "/getSegmentId/{x}/{y}/{z}", produces = "application/x-protobuf")
-    public String getSegmentId(@PathVariable("x") Integer x,@PathVariable("y") Integer y,@PathVariable("z") Integer z, HttpServletResponse response){
+    public String getSegmentId(@PathVariable("x") Integer x,@PathVariable("y") Integer y,@PathVariable("z") Integer z,Integer segment1,Integer segment2, HttpServletResponse response){
         try{
             byte[] result = homeService.getSegmentId(x,y,z);
             if(result != null && result.length > 0){
@@ -86,7 +86,9 @@ public class HomeController {
 
            // ParamsBean paramsBean = (ParamsBean) JsonUtil.toObject(paramBody,ParamsBean.class);
             String event="";
-
+            if(eventsList==null){
+                return null;
+            }
             if(eventsList.contains("01")){
             }else {
                 return null;
@@ -132,16 +134,32 @@ public class HomeController {
     public Object getMutiPointInfo(@RequestBody ParamsBean paramsBean){
         Map<String,Object> state = new HashMap<>();
        if(paramsBean.getRoadSecList().length>1){
-          return "请选择同一条道路!";
+           state.put("desc","请选择同一条道路!");
+           return state;
        }
         try {
-            List<Map<String,Object>> list = homeService.getMultiPointInfo(paramsBean);
-            state.put("state",200);
-            return list;
+            Map<String,Object> map1 = homeService.getMultiPointInfo(paramsBean);
+            return map1;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        state.put("state",500);
+        return null;
+    }
+
+    /**
+     * 车辆经过次数热力图
+     * @param paramsBean
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/getTimesHeat")
+    public Map<String,Object> getTimesHeat(@RequestBody ParamsBean paramsBean){
+        try{
+            Map<String,Object> result = homeService.getTimesHeat(paramsBean);
+            return result;
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
