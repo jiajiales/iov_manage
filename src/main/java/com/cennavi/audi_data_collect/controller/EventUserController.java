@@ -22,10 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.ExcelData;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.service.EventUserService;
 //import com.cennavi.audi_data_collect.service.EventUserService;
 import com.cennavi.audi_data_collect.util.CSVUtil;
+import com.cennavi.audi_data_collect.util.ExcelOutPutUtils;
 
 @RestController
 @RequestMapping("/eventUser")
@@ -253,28 +255,69 @@ public class EventUserController {
 	 
 		//数据导出
 				@RequestMapping(value = "/exportCsvs")
-					public Object exportCsvs(ParamsBean paramsBean,HttpServletResponse response) throws ParseException {
+					public Object exportCsvs(ParamsBean paramsBean,HttpServletResponse response) throws Exception {
 
+					
+					ExcelData data = new ExcelData();
+		            data.setName("hello");
+		            List<String> titles = new ArrayList();
+		            titles.add("event_id");
+		            titles.add("type_name");
+		            titles.add("road_name");
+		            titles.add("date");
+		            titles.add("time");
+		            data.setTitles(titles);
+
+		            List<List<Object>> rows = new ArrayList();
+					
+					
 					  List<CVSBean> list=	eventUserService.exportCsvs(paramsBean);
-				        HashMap map = new LinkedHashMap();
-				        map.put("1", "event_id");
-				        map.put("2", "type_name");
-				        map.put("3", "road_name");
-				        map.put("4", "date");
-				        map.put("5", "time");
-				        String fileds[] = new String[] { "event_id", "type_name","road_name","date","time" };
-				        try {
-							CSVUtil.exportFile(response, map, list, fileds);
-							/*
-							 * response：直接传入response
-							 * map：对应文件的第一行 
-							 * list：对应 List<CVSBean>  list对象形式
-							 * fileds：对应每一列的数据
-							 * */
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}//直接调用
+					  
+					  for (int i = 0; i < list.size(); i++) {//遍历数组，把数组内容放进Excel的行中
+			                List<Object> row = new ArrayList();
+			                row.add(list.get(i).getEvent_id());
+			                row.add(list.get(i).getType_name());
+			                row.add(list.get(i).getRoad_name());
+			                row.add(list.get(i).getDate());
+			                row.add(list.get(i).getTime());
+			                rows.add(i, row);
+			            }
+
+			            data.setRows(rows);
+
+
+			            //生成本地
+			            /*File f = new File("c:/test.xlsx");
+			            FileOutputStream out = new FileOutputStream(f);
+			            ExportExcelUtils.exportExcel(data, out);
+			            out.close();*/
+			            SimpleDateFormat fdate=new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+//			            String fileName=fdate.format(new Date())+"Event_Data.xlsx";//老版本的office改成xls
+			            String fileName="Event_Data.xlsx";//老版本的office改成xls
+
+			            ExcelOutPutUtils.exportExcel(response,fileName,data);
+			            
+			            
+			            
+//				        HashMap map = new LinkedHashMap();
+//				        map.put("1", "event_id");
+//				        map.put("2", "type_name");
+//				        map.put("3", "road_name");
+//				        map.put("4", "date");
+//				        map.put("5", "time");
+//				        String fileds[] = new String[] { "event_id", "type_name","road_name","date","time" };
+//				        try {
+//							CSVUtil.exportFile(response, map, list, fileds);
+//							/*
+//							 * response：直接传入response
+//							 * map：对应文件的第一行 
+//							 * list：对应 List<CVSBean>  list对象形式
+//							 * fileds：对应每一列的数据
+//							 * */
+//						} catch (IOException e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						}//直接调用
 
 		            
 			        return null;

@@ -23,8 +23,8 @@ public class EventUserDao {
 	    private JdbcTemplate jdbcTemplate;
 	 private static SimpleDateFormat inSDF = new SimpleDateFormat("yyyy-mm-dd");
 	  private static SimpleDateFormat outSDF = new SimpleDateFormat("mm/dd/yyyy");
-	  private static SimpleDateFormat inSDFH = new SimpleDateFormat("hh:mm:ss");
-	  private static SimpleDateFormat outSDFH = new SimpleDateFormat("hh/mm/ss");
+//	  private static SimpleDateFormat inSDFH = new SimpleDateFormat("hh:mm:ss");
+//	  private static SimpleDateFormat outSDFH = new SimpleDateFormat("hh/mm/ss");
 	 //验证用户信息111
 	public boolean check(String name, String password) {
 		
@@ -266,7 +266,7 @@ public class EventUserDao {
 	}
 	 
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
-		String sql="SELECT  a.event_id,COALESCE(b.event_name_en, '0') as type_name,d.en_name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,7) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
+		String sql="SELECT  a.event_id,COALESCE(b.event_name_en, '0') as type_name,d.en_name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,8) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
 		System.err.println("city:"+paramsBean.getCity());
 		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
 				  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
@@ -343,10 +343,10 @@ public class EventUserDao {
 			            cVSBean.setDate(outDate);
 				   }   
 				   if(k.equals("time")){//时间格式转换
-					   String outHour = "";
-					    Date date = inSDFH.parse(map.get(k).toString());
-			            outHour = outSDFH.format(date);
-			            cVSBean.setTime(outHour);
+//					   String outHour = "";
+//					    Date date = inSDFH.parse(map.get(k).toString());
+//			            outHour = outSDFH.format(date);
+			            cVSBean.setTime(map.get(k).toString());
 				   }   
 	  
 		      }
