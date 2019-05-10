@@ -17,8 +17,9 @@ public class HomeService {
     @Autowired
     private HomeDao homeDao;
 
-    public byte[] getVRUEvent(int x,int y,int z,String sDate,String eDate,String dates,String sTime,String eTime,int orderType,String road) throws Exception{
-        return homeDao.getVRUEvent(x,y,z,sDate,eDate,dates,sTime,eTime,orderType,road );
+    public byte[] getVRUEvent(int x,int y,int z,String city,String eventsList,String dataList,String dataListFormat,String roadSecList,
+                              String timeFrame,String isContinuous) throws Exception{
+        return homeDao.getVRUEventNew(x,y,z,city,eventsList,dataList,dataListFormat,roadSecList,timeFrame,isContinuous);
     }
 
     public byte[] getSegmentId(int x,int y,int z) throws Exception{
@@ -27,6 +28,10 @@ public class HomeService {
 
     public List<Map<String,Object>> getPointInfo(ParamsBean paramsBean){
         return homeDao.getPointInfo(paramsBean);
+    }
+
+    public List<Map<String,Object>> getMultiPointInfo(ParamsBean paramsBean){
+        return homeDao.getMultiPointInfo(paramsBean);
     }
 
     public List<Map<String,Object>> getRoad(){

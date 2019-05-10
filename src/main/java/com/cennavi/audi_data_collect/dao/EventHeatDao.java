@@ -51,7 +51,7 @@ public class EventHeatDao {
     	String isContinuous = map.get("isContinuous").toString();
     	String sql = "";
     	
-    	sql = "select e.type_code typeId,e.type_name typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
+    	sql = "select e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
 				"left join gaosu_segment s on s.id=c.segment_id  " + 
     			"left join event_type e on c.event_type=e.type_code " + 
 				"where 1=1 ";
@@ -61,14 +61,14 @@ public class EventHeatDao {
 		if(map.get("dateList") != null) {
 			JSONArray dateList = (JSONArray)map.get("dateList");
 			if(isContinuous.equals("true")) {
-				sql += " and substring(c.upload_time,0,11) between '"+dateList.get(0)+"' and '"+dateList.get(1)+"'";
+				if(dateList.size()>0)sql += " and substring(c.upload_time,0,11) between '"+dateList.get(0)+"' and '"+dateList.get(1)+"'";
 	    	}else {
 	    		String es2 = "(";
 				for(int i=0;i<dateList.size();i++) {
 					es2 += "'" + dateList.get(i) + "',";
 				}
 				es2 = es2.substring(0, es2.length()-1) + ")";
-				sql += " and substring(c.upload_time,0,11) in "+es2;
+				if(dateList.size()>0)sql += " and substring(c.upload_time,0,11) in "+es2;
 	    	}
 		}
 		if(map.get("eventsList") != null) {
@@ -78,11 +78,11 @@ public class EventHeatDao {
 				es += "'" + eventsList.get(i) + "',";
 			}
 			es = es.substring(0, es.length()-1) + ")";
-			sql += " and c.event_type in " + es;
+			if(eventsList.size()>0)sql += " and c.event_type in " + es;
 		}
 		if(map.get("timeFrame") != null) {
 			JSONArray timeFrame = (JSONArray)map.get("timeFrame");
-			sql += " and substring(c.upload_time,12,5) between '"+timeFrame.get(0)+"' and '"+timeFrame.get(1)+"'";
+			if(timeFrame.size()>0)sql += " and substring(c.upload_time,12,5) between '"+timeFrame.get(0)+"' and '"+timeFrame.get(1)+"'";
 		}
 		if(map.get("roadSecList") != null) {
 			JSONArray roadSecList = (JSONArray)map.get("roadSecList");
@@ -91,7 +91,7 @@ public class EventHeatDao {
 				es1 += roadSecList.get(i) + ",";
 			}
 			es1 = es1.substring(0, es1.length()-1) + ")";
-			sql += " and s.r_id in "+es1;
+			if(roadSecList.size()>0)sql += " and s.r_id in "+es1;
 		}
 		System.out.println(sql);
 		Map<String, Object> geojson = CommUtils.getGeojson(jdbcTemplate, sql);
@@ -99,7 +99,7 @@ public class EventHeatDao {
     }
     
     public List<Map<String, Object>> getRoadList() throws Exception{
-    	String sql = "SELECT g.name,g.r_id FROM gaosu g where g.r_id>0 group by g.name,g.r_id order by g.r_id";
+    	String sql = "SELECT g.en_name as name,g.r_id FROM gaosu g where g.r_id>0 group by g.en_name,g.r_id order by g.r_id";
     	return jdbcTemplate.queryForList(sql);
     }
     

@@ -1,12 +1,15 @@
 package com.cennavi.audi_data_collect.controller;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.service.HomeService;
+import com.cennavi.audi_data_collect.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,12 +56,42 @@ public class HomeController {
     /**
      * 行人事件热力图
      */
-    @RequestMapping(value = "/getVRUEvent/{x}/{y}/{z}/{sDate}/{eDate}/{dates}/{sTime}/{eTime}/{orderType}/{road}", produces = "application/x-protobuf")
+    /*@RequestMapping(value = "/getVRUEvent/{x}/{y}/{z}/{params}", produces = "application/x-protobuf")
     public String getVRUEvent(@PathVariable("x") int x , @PathVariable("y") int y , @PathVariable("z") int z ,
-                           @PathVariable("sDate") String sDate,@PathVariable("eDate") String eDate,@PathVariable("dates") String dates,@PathVariable("sTime") String sTime,
-                           @PathVariable("eTime") String eTime,@PathVariable("orderType") int orderType,@PathVariable("road") String road, HttpServletResponse response){
+                              @RequestBody ParamsBean paramsBean, HttpServletResponse response){
         try{
-            byte[] result = homeService.getVRUEvent(x,y,z,sDate,eDate,dates,sTime,eTime,orderType,road);
+            String event = "";
+            for(int i=0; i<paramsBean.getEventsList().length; i++){
+                event = event + paramsBean.getEventsList()[i].toString()+",";
+            }
+            if(event.contains("01")){
+            }else {
+                return null;
+            }
+            byte[] result = homeService.getVRUEvent(x,y,z,paramsBean);
+            if(result != null && result.length > 0){
+                response.getOutputStream().write(result);
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }*/
+    @RequestMapping(value = "/getVRUEvent/{x}/{y}/{z}", produces = "application/x-protobuf")
+    public String getVRUEvent(@PathVariable("x") int x , @PathVariable("y") int y , @PathVariable("z") int z ,
+                              String city,String eventsList,String dataList,String dataListFormat,String roadSecList,
+                              String timeFrame,String isContinuous,  HttpServletResponse response){
+
+        try{
+
+           // ParamsBean paramsBean = (ParamsBean) JsonUtil.toObject(paramBody,ParamsBean.class);
+            String event="";
+
+            if(eventsList.contains("01")){
+            }else {
+                return null;
+            }
+            byte[] result = homeService.getVRUEvent(x,y,z,city,eventsList,dataList,dataListFormat,roadSecList,timeFrame,isContinuous);
             if(result != null && result.length > 0){
                 response.getOutputStream().write(result);
             }
@@ -81,6 +114,28 @@ public class HomeController {
         try {
             List<Map<String,Object>> list = homeService.getPointInfo(paramsBean);
 
+            state.put("state",200);
+            return list;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        state.put("state",500);
+        return null;
+    }
+
+    /**
+     * 选择多个路段查看信息
+     */
+    @ResponseBody
+    @RequestMapping("/getMutiPointInfo")
+//    public List<Map<String,Object>> getPointInfo(Integer id,String[] dataList,String[] timeFrame,String isContinuous){
+    public Object getMutiPointInfo(@RequestBody ParamsBean paramsBean){
+        Map<String,Object> state = new HashMap<>();
+       if(paramsBean.getRoadSecList().length>1){
+          return "请选择同一条道路!";
+       }
+        try {
+            List<Map<String,Object>> list = homeService.getMultiPointInfo(paramsBean);
             state.put("state",200);
             return list;
         } catch (Exception e) {

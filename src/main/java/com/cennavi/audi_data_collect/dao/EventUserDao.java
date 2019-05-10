@@ -17,6 +17,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 @Component
+
 public class EventUserDao {
 	 @Autowired
 	    private JdbcTemplate jdbcTemplate;

@@ -1,10 +1,15 @@
 package com.cennavi.audi_data_collect.controller;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,7 +17,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.service.EventHeatService;
+import com.cennavi.audi_data_collect.service.EventUserService;
+import com.cennavi.audi_data_collect.util.CSVUtil;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -34,6 +43,9 @@ public class EventHeatController {
 	
     @Autowired
     private EventHeatService eventHeatService;
+    
+    @Autowired
+    private EventUserService eventUserService;
 
     BigDecimal roadLength = new BigDecimal(0);
     List<Coordinate> clist = null;
@@ -217,7 +229,6 @@ public class EventHeatController {
             return null;
         }
     }
-    
     
     private static double rad(double d) {
 		return d * Math.PI / 180.0;

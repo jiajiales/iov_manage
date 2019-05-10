@@ -75,6 +75,7 @@ public class CommUtils {
 
 		List<Map<String, Object>> features = new ArrayList<Map<String, Object>>();
 
+		Coordinate cs = null;
 		for (Map<String, Object> m : results) {
 			
 			int hashCode = 0;
@@ -97,7 +98,7 @@ public class CommUtils {
 			}
 			feature.put("properties", properties);
 			//feature.put("geometry", JSON.parse(m.get("geojson").toString()));
-			Coordinate cs = new WKTReader().read(m.get("wkt").toString()).getCoordinates()[0];
+			cs = new WKTReader().read(m.get("wkt").toString()).getCoordinates()[0];
 			feature.put("geometry", JSON.parse("{\"coordinates\":["+cs.x+","+cs.y+"],\"type\":\"Point\"}"));
 			features.add(feature);
 
