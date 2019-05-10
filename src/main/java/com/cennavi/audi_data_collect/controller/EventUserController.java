@@ -265,6 +265,12 @@ public class EventUserController {
 				        String fileds[] = new String[] { "event_id", "type_name","road_name","date","time" };
 				        try {
 							CSVUtil.exportFile(response, map, list, fileds);
+							/*
+							 * response：直接传入response
+							 * map：对应文件的第一行 
+							 * list：对应 List<CVSBean>  list对象形式
+							 * fileds：对应每一列的数据
+							 * */
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
