@@ -30,12 +30,16 @@ public class HomeService {
         return homeDao.getPointInfo(paramsBean);
     }
 
-    public List<Map<String,Object>> getMultiPointInfo(ParamsBean paramsBean){
+    public Map<String,Object> getMultiPointInfo(ParamsBean paramsBean) throws Exception{
         return homeDao.getMultiPointInfo(paramsBean);
     }
 
     public List<Map<String,Object>> getRoad(){
         return homeDao.getRoad();
+    }
+
+    public Map<String,Object> getTimesHeat(ParamsBean paramsBean){
+        return homeDao.getTimesHeat(paramsBean);
     }
 
 }
