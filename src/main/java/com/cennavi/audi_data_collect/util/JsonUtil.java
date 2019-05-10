@@ -1,7 +1,6 @@
 package com.cennavi.audi_data_collect.util;
 
 
-import com.cennavi.framework.JsonObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 //import org.apache.log4j.Logger;
 

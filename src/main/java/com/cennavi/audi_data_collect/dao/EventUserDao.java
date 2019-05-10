@@ -24,7 +24,7 @@ public class EventUserDao {
 	  private static SimpleDateFormat outSDF = new SimpleDateFormat("mm/dd/yyyy");
 	  private static SimpleDateFormat inSDFH = new SimpleDateFormat("hh:mm:ss");
 	  private static SimpleDateFormat outSDFH = new SimpleDateFormat("hh/mm/ss");
-	 //验证用户信息111
+	 //验证用户信息
 	public boolean check(String name, String password) {
 		
 		System.err.println(name);
