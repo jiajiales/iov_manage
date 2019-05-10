@@ -259,7 +259,7 @@ public class EventUserController {
 
 					
 					ExcelData data = new ExcelData();
-		            data.setName("hello");
+		            data.setName("Event_Data");
 		            List<String> titles = new ArrayList();
 		            titles.add("event_id");
 		            titles.add("type_name");
