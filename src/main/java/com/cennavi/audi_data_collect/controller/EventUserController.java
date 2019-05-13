@@ -64,10 +64,10 @@ public class EventUserController {
 					   map.put(i, obj.toString());
 					   i++;
 				}
-				   if(!map.get(0).equals("") && map.get(0)!=null) {
+				   if(map.get(0)!=null  && !map.get(0).equals("") ) {
 					   startTmie=map.get(0);
 				   }
-				   if(!map.get(1).equals("") && map.get(1)!=null) {
+				   if(map.get(1)!=null &&  !map.get(1).equals("")  ) {
 					   endTime=map.get(1);
 				   }
 				  
@@ -93,10 +93,10 @@ public class EventUserController {
 				   n++;
 				
 			}
-			   if(!map2.get(0).equals("") && map2.get(0)!=null) {
+			   if(map2.get(0)!=null && !map2.get(0).equals("")  ) {
 				   startTimeFrames=map2.get(0);
 			   }
-			   if(!map2.get(1).equals("") && map2.get(1)!=null) {
+			   if(map2.get(1)!=null  && !map2.get(1).equals("") ) {
 				   endTimeFrames=map2.get(1);
 			   }
 			  String k2=null;
