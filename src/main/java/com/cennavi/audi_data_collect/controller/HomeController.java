@@ -86,7 +86,7 @@ public class HomeController {
 
            // ParamsBean paramsBean = (ParamsBean) JsonUtil.toObject(paramBody,ParamsBean.class);
             String event="";
-            if(eventsList==null){
+            if(eventsList==null || roadSecList==null || dataList==null || timeFrame==null || isContinuous==null){
                 return null;
             }
             if(eventsList.contains("01")){

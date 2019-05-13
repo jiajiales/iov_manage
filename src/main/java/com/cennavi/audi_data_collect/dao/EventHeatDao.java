@@ -51,7 +51,7 @@ public class EventHeatDao {
     	String isContinuous = map.get("isContinuous").toString();
     	String sql = "";
     	
-    	sql = "select e.id,e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
+    	sql = "select c.event_id eventid,e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
 				"left join gaosu_segment s on s.id=c.segment_id  " + 
     			"left join event_type e on c.event_type=e.type_code " + 
 				"where 1=1 ";
