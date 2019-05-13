@@ -3,6 +3,7 @@ package com.cennavi.audi_data_collect.dao;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
+import com.cennavi.audi_data_collect.util.CommUtils;
 @Component
 
 public class EventUserDao {
@@ -361,6 +363,110 @@ public class EventUserDao {
 			   
 		}
 			return list;
+	}
+	public Object dataStatistic(ParamsBean paramsBean) throws Exception {
+		String sql="SELECT  t1.event_name_en as typeName ,t1.type_code as typeCode,COALESCE(t2.nums,0) AS  num    from event_type t1  LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  , b.type_name as eventName  FROM  collection_info_new   a   LEFT JOIN   event_type b    ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE 1=1";
+		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b    LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  WHERE 1=1  ";
+
+		if(paramsBean.getCity()!= null && !paramsBean.getCity().equals("")) {
+			sql += " and a.city_name='"+paramsBean.getCity()+"'";
+			sql2 += " and a.city_name='"+paramsBean.getCity()+"'";
+		}
+		
+		if(paramsBean.getDataList() != null) {
+			if(paramsBean.getIsContinuous().equals("true")) {
+				
+				if(paramsBean.getDataList().length>0) {
+					sql += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+					sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+				}
+	    	}else {
+	    		String es2 = "(";
+				for(int i=0;i<paramsBean.getDataList().length;i++) {
+					es2 += "'" + paramsBean.getDataList().length + "',";
+				}
+				es2 = es2.substring(0, es2.length()-1) + ")";
+				if(paramsBean.getDataList().length>0)
+				{
+					sql += " and substring(a.upload_time,0,11) in "+es2;
+					sql2 += " and substring(a.upload_time,0,11) in "+es2;
+				}
+					
+	    	}
+		}
+		
+		
+		if(paramsBean.getEventsList() != null) {
+			String es = "(";
+			for(int i=0;i<paramsBean.getEventsList().length;i++) {
+					es += "'" + paramsBean.getEventsList()[i] + "',";
+			}
+			es = es.substring(0, es.length()-1) + ")";
+			if(paramsBean.getEventsList().length>0)
+			{
+				sql += " and a.event_type in " + es;
+				sql2 += " and a.event_type in " + es;
+			}
+				
+		}
+		
+		if(paramsBean.getTimeFrame()!= null ) {
+			if(paramsBean.getTimeFrame().length>0)
+			{
+				sql += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+			    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+			}
+		}
+		if(paramsBean.getRoadSecList() != null) {
+			String es1 = "(";
+			for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+				es1 += paramsBean.getRoadSecList()[i] + ",";
+			}
+			es1 = es1.substring(0, es1.length()-1) + ")";
+			if(paramsBean.getRoadSecList().length>0)
+				{
+				sql += " and d.r_id in "+es1;
+				sql2 += " and d.r_id in "+es1;
+				}
+		}
+		
+		  sql+=" group  by b.type_name   )  t2  ON t2.eventName=t1.type_name ";
+		  
+		  if ( paramsBean.getSort()!=null  && !paramsBean.getSort().equals("")) {
+			  sql += "  order by  num  "+paramsBean.getSort()+"";
+		  		}
+		  System.err.println("sql:"+sql);
+		  System.err.println("sql2:"+sql2);
+		  double k=jdbcTemplate.queryForObject(sql2,double.class);
+			 System.out.println("k:"+k);
+			
+		  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+		  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+		  for (Map<String, Object> map : queryForList) {
+			  Map<String, Object> map2=  new HashMap<String, Object>();
+				 for (String s : map.keySet()) {
+					 map2.put(s, map.get(s));
+					 if(s.equals("num")) {
+						 double a=Integer.parseInt(map.get(s).toString());
+						 double n=(double)Math.round(a/k*10000)/100;
+						 if(n==100.00) {
+							 n=99.99;
+						 }
+						 map2.put("percentage",  n);
+					 }
+		            }
+				 
+				 queryForList2.add(map2);
+		}
+			JSONObject json;
+			 JSONArray jsonArray = new JSONArray();
+		  for (Map<String, Object> map : queryForList2) {  
+			  json =new JSONObject(map);
+			  jsonArray.add(json);
+		}
+		  
+		return jsonArray;
 	}
 
 }

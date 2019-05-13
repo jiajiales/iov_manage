@@ -111,15 +111,13 @@ public class EventUserController {
 				    roadSecList= endstr2.substring(0,endstr2.length()-1);
 			  }
 			  
-			  
-//			  json.getString("isContinuous");
 			return	eventUserService.queryHistogram(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"),dataLists);
 		
 		}
 		
 	
      //数据统计
-	@RequestMapping(value = "/dataStatistics")
+	@RequestMapping(value = "/dataStatistic")
 	public Object dataStatistics(@RequestBody String dataStatisticsDate){
 		
 		String city="",sort="",isContinuous="",startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="", eventsList="";
@@ -320,5 +318,9 @@ public class EventUserController {
 System.err.println(paramsBean);
 		  return  paramsBean;
 		  }
-		
+		//数据统计  test
+			@RequestMapping(value = "/dataStatistics")
+			public Object dataStatistic(@RequestBody ParamsBean paramsBean) throws Exception{
+				return eventUserService.dataStatistic(paramsBean);
+			}
 }
