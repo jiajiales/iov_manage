@@ -43,5 +43,9 @@ public class EventUserService {
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
 		return eventUserDao.exportCsvs(paramsBean);
 	}
+	public Object dataStatistic(ParamsBean paramsBean) throws Exception {
+		// TODO Auto-generated method stub
+		return eventUserDao.dataStatistic(paramsBean);
+	}
 
 }
