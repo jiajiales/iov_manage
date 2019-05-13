@@ -384,7 +384,7 @@ public class EventUserDao {
 	    	}else {
 	    		String es2 = "(";
 				for(int i=0;i<paramsBean.getDataList().length;i++) {
-					es2 += "'" + paramsBean.getDataList().length + "',";
+					es2 += "'" + paramsBean.getDataList()[i] + "',";
 				}
 				es2 = es2.substring(0, es2.length()-1) + ")";
 				if(paramsBean.getDataList().length>0)
