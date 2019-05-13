@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONArray;
@@ -82,7 +83,10 @@ public class EventUserController {
 					   data ="'" +obj + "',";
 					   endData += data;
 				}
-				   dataLists= endData.substring(0,endData.length()-1);
+				   if(endData.length()>0) {
+					   dataLists= endData.substring(0,endData.length()-1);
+				   }
+				  
 			  }
 			   
 			   JSONArray timeFrames = json.getJSONArray("timeFrame");
@@ -147,7 +151,10 @@ public class EventUserController {
 				   data ="'" +obj + "',";
 				   endData += data;
 			}
-			   dataLists= endData.substring(0,endData.length()-1);
+			   if(endData.length()>0) {
+				   dataLists= endData.substring(0,endData.length()-1);
+			   }
+			 
 		  }
 		
 		   
@@ -194,22 +201,26 @@ public class EventUserController {
 		@RequestMapping(value = "/brokenLine")
 		public Object brokenLine(@RequestBody String brokenLineData){
 			
-			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="";
+			String city="",eventType="",isContinuous="",startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="";
 			
 			  JSONObject  json = JSONObject.parseObject(brokenLineData);
 			 
 			  if(json.getString("isContinuous").equals("true")) {
 				   JSONArray str = json.getJSONArray("dataList");
+//				   str.size()>1;
 				   Map<Integer, String> map=new HashMap<Integer,String>();
 				   int i=0;
 				   for (Object obj : str) {
 					   map.put(i, obj.toString());
 					   i++;
 				}
-				   if(!map.get(0).equals("") && map.get(0)!=null) {
+//				  if(map.size()>1) {
+//					  
+//				  }  
+				   if(map.get(0)!=null  &&  !map.get(0).equals("")  ) {
 					   startTmie=map.get(0);
 				   }
-				   if(!map.get(1).equals("") && map.get(1)!=null) {
+				   if(map.get(1)!=null &&   !map.get(1).equals("") ) {
 					   endTime=map.get(1);
 				   }
 				  
@@ -221,7 +232,9 @@ public class EventUserController {
 					   data ="'" +obj + "',";
 					   endData += data;
 				}
+				   if(endData.length()>0) {
 				   dataLists= endData.substring(0,endData.length()-1);
+				   }
 			  }
 			   
 			   JSONArray timeFrames = json.getJSONArray("timeFrame");
@@ -232,10 +245,10 @@ public class EventUserController {
 				   n++;
 				
 			}
-			   if(!map2.get(0).equals("") && map2.get(0)!=null) {
+			   if(map2.get(0)!=null && !map2.get(0).equals("")  ) {
 				   startTimeFrames=map2.get(0);
 			   }
-			   if(!map2.get(1).equals("") && map2.get(1)!=null) {
+			   if(map2.get(1)!=null && !map2.get(1).equals("")  ) {
 				   endTimeFrames=map2.get(1);
 			   }
 			  String k2=null;
@@ -249,13 +262,17 @@ public class EventUserController {
 			  if(endstr2.length()>0) {
 				    roadSecList= endstr2.substring(0,endstr2.length()-1);
 			  }
-			   
-			return	eventUserService.brokenLine(json.getString("city"),json.getString("eventType"),startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("isContinuous"),dataLists);
+			  		  city=json.getString("city");
+					  eventType=json.getString("eventType");
+					  isContinuous=json.getString("isContinuous");
+			return	eventUserService.brokenLine(city,eventType,startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,isContinuous,dataLists);
 		}
 	 
 		//数据导出
+		  @ResponseBody
 				@RequestMapping(value = "/exportCsvs")
-					public Object exportCsvs(ParamsBean paramsBean,HttpServletResponse response) throws Exception {
+//					public Object exportCsvs(ParamsBean paramsBean,HttpServletResponse response) throws Exception {
+					public Object exportCsvs(@RequestBody ParamsBean paramsBean,HttpServletResponse response) throws Exception {
 
 					
 					ExcelData data = new ExcelData();
@@ -322,5 +339,12 @@ public class EventUserController {
 		            
 			        return null;
 			    }
+		  
+		  @ResponseBody
+			@RequestMapping(value = "/export")
+				public Object export(@RequestBody ParamsBean paramsBean,HttpServletResponse response) throws Exception {
+System.err.println(paramsBean);
+		  return  paramsBean;
+		  }
 		
 }

@@ -67,8 +67,10 @@ public class EventUserDao {
 
 			  }
 		  }else {
+			  if(dataLists!=null && !dataLists.equals("")) {
 			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
 			  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+			  }
 
 		  }
 		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
@@ -139,8 +141,11 @@ public class EventUserDao {
 
 				  }
 			  }else {
-				  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-				  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+				  if(dataLists!=null && !dataLists.equals("")) {
+					  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+					  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+				  }
+				  
 
 			  }
 			 
@@ -215,8 +220,10 @@ public class EventUserDao {
 
 			  }
 		  }else {
+			  if(dataLists!=null && !dataLists.equals("")) {
 			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
 			  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
+			  }
 
 		  }
 		  
