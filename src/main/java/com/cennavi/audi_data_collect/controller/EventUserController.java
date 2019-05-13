@@ -54,7 +54,7 @@ public class EventUserController {
 		@RequestMapping(value = "/queryHistogram")
 		public Object queryHistogram(@RequestBody  String queryHistogramDate){
 			
-			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="", dataLists="";
+			String startTmie="",endTime="",startTimeFrames="",endTimeFrames="", dataLists="", eventsList="";
 			  JSONObject  json = JSONObject.parseObject(queryHistogramDate);
 			  if(json.getString("isContinuous").equals("true")) {
 				   JSONArray str = json.getJSONArray("dataList");
@@ -122,7 +122,7 @@ public class EventUserController {
 	@RequestMapping(value = "/dataStatistics")
 	public Object dataStatistics(@RequestBody String dataStatisticsDate){
 		
-		String startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="";
+		String city="",sort="",isContinuous="",startTmie="",endTime="",startTimeFrames="",endTimeFrames="",  dataLists="", eventsList="";
 		  JSONObject  json = JSONObject.parseObject(dataStatisticsDate);
 		  if(json.getString("isContinuous").equals("true")) {
 			   JSONArray str = json.getJSONArray("dataList");
@@ -132,10 +132,10 @@ public class EventUserController {
 				   map.put(i, obj.toString());
 				   i++;
 			}
-			   if(!map.get(0).equals("") && map.get(0)!=null) {
+			   if(map.get(0)!=null && !map.get(0).equals("")  ) {
 				   startTmie=map.get(0);
 			   }
-			   if(!map.get(1).equals("") && map.get(1)!=null) {
+			   if(  map.get(1)!=null && !map.get(1).equals("")) {
 				   endTime=map.get(1);
 			   }
 			  
@@ -163,10 +163,10 @@ public class EventUserController {
 			   n++;
 			
 		}
-		   if(!map2.get(0).equals("") && map2.get(0)!=null) {
+		   if(map2.get(0)!=null  && !map2.get(0).equals("")  ) {
 			   startTimeFrames=map2.get(0);
 		   }
-		   if(!map2.get(1).equals("") && map2.get(1)!=null) {
+		   if( map2.get(1)!=null && !map2.get(1).equals("")) {
 			   endTimeFrames=map2.get(1);
 		   }
 		   JSONArray str2 = json.getJSONArray("eventsList");
@@ -176,7 +176,10 @@ public class EventUserController {
 			   kk ="'" +obj + "',";
 			   endstr += kk;
 		}
-		  String  eventsList= endstr.substring(0,endstr.length()-1);
+		   if(endstr.length()>0) {
+			     eventsList= endstr.substring(0,endstr.length()-1);
+		   }
+		 
 		  String k2=null;
 		   String endstr2="";
 		  JSONArray str3 = json.getJSONArray("roadSecList");
@@ -189,7 +192,7 @@ public class EventUserController {
 			    roadSecList= endstr2.substring(0,endstr2.length()-1);
 		  }
 		 
-		return	eventUserService.dataStatistics(json.getString("city"),eventsList,startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,json.getString("sort"),json.getString("isContinuous"),dataLists);
+		return	eventUserService.dataStatistics(city,eventsList,startTmie,endTime,roadSecList,startTimeFrames,endTimeFrames,sort,isContinuous,dataLists);
 				
 	}
 	
