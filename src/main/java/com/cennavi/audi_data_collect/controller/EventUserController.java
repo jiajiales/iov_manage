@@ -25,9 +25,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
 import com.cennavi.audi_data_collect.bean.ExcelData;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
+import com.cennavi.audi_data_collect.bean.User;
 import com.cennavi.audi_data_collect.service.EventUserService;
-//import com.cennavi.audi_data_collect.service.EventUserService;
-import com.cennavi.audi_data_collect.util.CSVUtil;
 import com.cennavi.audi_data_collect.util.ExcelOutPutUtils;
 
 @RestController
@@ -37,14 +36,11 @@ public class EventUserController {
 	 @Autowired
 	    private EventUserService eventUserService;
 	 
-	 private static SimpleDateFormat inSDF = new SimpleDateFormat("mm/dd/yyyy");
-	  private static SimpleDateFormat outSDF = new SimpleDateFormat("yyyy-mm-dd");
-	 
 	//验证用户信息
 	@RequestMapping(value = "/checkUser")
-	public boolean checkUser(@RequestBody String JsonDate){
-		  JSONObject  json = JSONObject.parseObject(JsonDate);
-		return	eventUserService.check(json.getString("name"),json.getString("password"));
+	public boolean checkUser(@RequestBody User user){
+//		  JSONObject  json = JSONObject.parseObject(JsonDate);
+		return	eventUserService.check(user.getName(),user.getPassword());
 	}
 	
 	 //类型列表
@@ -277,7 +273,7 @@ public class EventUserController {
 					
 					ExcelData data = new ExcelData();
 		            data.setName("Event_Data");
-		            List<String> titles = new ArrayList();
+		            List<String> titles = new ArrayList<String>();
 		            titles.add("event_id");
 		            titles.add("type_name");
 		            titles.add("road_name");
@@ -285,13 +281,13 @@ public class EventUserController {
 		            titles.add("time");
 		            data.setTitles(titles);
 
-		            List<List<Object>> rows = new ArrayList();
+		            List<List<Object>> rows = new ArrayList<List<Object>>();
 					
 					
 					  List<CVSBean> list=	eventUserService.exportCsvs(paramsBean);
 					  
 					  for (int i = 0; i < list.size(); i++) {//遍历数组，把数组内容放进Excel的行中
-			                List<Object> row = new ArrayList();
+			                List<Object> row = new ArrayList<Object>();
 			                row.add(list.get(i).getEvent_id());
 			                row.add(list.get(i).getType_name());
 			                row.add(list.get(i).getRoad_name());
@@ -309,34 +305,9 @@ public class EventUserController {
 			            ExportExcelUtils.exportExcel(data, out);
 			            out.close();*/
 			            SimpleDateFormat fdate=new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-//			            String fileName=fdate.format(new Date())+"Event_Data.xlsx";//老版本的office改成xls
 			            String fileName="Event_Data.xlsx";//老版本的office改成xls
-
 			            ExcelOutPutUtils.exportExcel(response,fileName,data);
 			            
-			            
-			            
-//				        HashMap map = new LinkedHashMap();
-//				        map.put("1", "event_id");
-//				        map.put("2", "type_name");
-//				        map.put("3", "road_name");
-//				        map.put("4", "date");
-//				        map.put("5", "time");
-//				        String fileds[] = new String[] { "event_id", "type_name","road_name","date","time" };
-//				        try {
-//							CSVUtil.exportFile(response, map, list, fileds);
-//							/*
-//							 * response：直接传入response
-//							 * map：对应文件的第一行 
-//							 * list：对应 List<CVSBean>  list对象形式
-//							 * fileds：对应每一列的数据
-//							 * */
-//						} catch (IOException e) {
-//							// TODO Auto-generated catch block
-//							e.printStackTrace();
-//						}//直接调用
-
-		            
 			        return null;
 			    }
 		  
