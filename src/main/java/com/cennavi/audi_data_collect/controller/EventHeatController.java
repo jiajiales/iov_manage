@@ -189,25 +189,41 @@ public class EventHeatController {
     @RequestMapping("/eventAggregateFigure")
     public Object eventAggregateFigure(@RequestBody String jsonData){
         try {
+        	//System.out.println(jsonData);
         	JSONObject json = JSONObject.fromObject(jsonData);
         	String city = json.getString("city"); 
-        	JSONArray dateList = json.getJSONArray("dataList");
-        	JSONArray eventsList = json.getJSONArray("eventsList");
-        	JSONArray roadSecList = json.getJSONArray("roadSecList");
+        	JSONArray dateList = json.optJSONArray("dataList");
+        	JSONArray eventsList = json.optJSONArray("eventsList");
+        	JSONArray roadSecList = json.optJSONArray("roadSecList");
         	String isContinuous = json.getString("isContinuous");
         	//String sort = json.getString("sort");
         	JSONArray timeFrame = json.getJSONArray("timeFrame");
         	
         	Map<String, Object> paramMap = new HashMap<String, Object>();
-        	paramMap.put("city", city);
-        	paramMap.put("dateList", dateList);
-        	paramMap.put("eventsList", eventsList);
-        	paramMap.put("roadSecList", roadSecList);
+        	if(city != null && !city.equals(""))paramMap.put("city", city);
+        	if(dateList != null && !dateList.isEmpty())paramMap.put("dateList", dateList);
+        	if(eventsList != null && !eventsList.isEmpty())paramMap.put("eventsList", eventsList);
+        	if(roadSecList != null && !roadSecList.isEmpty())paramMap.put("roadSecList", roadSecList);
         	paramMap.put("isContinuous", isContinuous);
         	//paramMap.put("sort", sort);
         	paramMap.put("timeFrame", timeFrame);
     		Map<String, Object> geojson = eventHeatService.eventAggregateFigure(paramMap);
     		return geojson;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    /**
+     * 根据事件id查询事件详细信息.
+     */
+    @ResponseBody
+    @RequestMapping("/getEventInfo")
+    public Object getEventInfo(Integer eventId){
+        try {
+        	Map<String, Object> map = eventHeatService.getEventInfo(eventId);
+    		return JSONObject.fromObject(map);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

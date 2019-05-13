@@ -28,6 +28,10 @@ public class EventHeatService {
     	return carHeatDao.eventAggregateFigure(paramMap);
     }
     
+    public Map<String, Object> getEventInfo(Integer eventId) throws Exception{
+    	return carHeatDao.getEventInfo(eventId);
+    }
+    
     public void insertSegment(Map<String, Object> map) {
     	carHeatDao.insertSegment(map);
     }
