@@ -51,7 +51,7 @@ public class EventHeatDao {
     	String isContinuous = map.get("isContinuous").toString();
     	String sql = "";
     	
-    	sql = "select e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
+    	sql = "select e.id,e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
 				"left join gaosu_segment s on s.id=c.segment_id  " + 
     			"left join event_type e on c.event_type=e.type_code " + 
 				"where 1=1 ";
@@ -78,7 +78,7 @@ public class EventHeatDao {
 				if(!eventsList.get(i).toString().equals("01"))es += "'" + eventsList.get(i) + "',";
 			}
 			es = es.substring(0, es.length()-1) + ")";
-			if(eventsList.size()>0)sql += " and c.event_type in " + es;
+			if(eventsList.size()>0 && es.length()>2)sql += " and c.event_type in " + es;
 		}
 		if(map.get("timeFrame") != null) {
 			JSONArray timeFrame = (JSONArray)map.get("timeFrame");
@@ -96,6 +96,15 @@ public class EventHeatDao {
 		System.out.println(sql);
 		Map<String, Object> geojson = CommUtils.getGeojson(jdbcTemplate, sql);
 		return geojson;
+    }
+    
+    public Map<String, Object> getEventInfo(Integer eventId) {
+    	String sql="select c.event_id,e.event_name_en,replace(replace(c.upload_time,'-','/'),':','/'),s.en_name from collection_info_new c " + 
+    			"left join gaosu_segment g on g.id=c.segment_id " + 
+    			"left join gaosu s on g.road_id=s.road_id " + 
+    			"left join event_type e on e.type_code=c.event_type " + 
+    			"where c.event_id="+eventId;
+    	return jdbcTemplate.queryForMap(sql);
     }
     
     public List<Map<String, Object>> getRoadList() throws Exception{
