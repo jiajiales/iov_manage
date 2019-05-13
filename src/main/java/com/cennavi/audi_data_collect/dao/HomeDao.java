@@ -252,12 +252,14 @@ public class HomeDao {
         }
         List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
         if(carList.size()==0){
-            return null;
+            map.put("velchels",0);
+
+            map.put("times",0);
+        }else {
+            map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
+
+            map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
         }
-        map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
-
-        map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
-
         resultList.add(map);
         return resultList;
     }
@@ -313,11 +315,14 @@ public class HomeDao {
         }
         List<Map<String,Object>> carList = jdbcTemplate.queryForList(sql2);     //有几辆车经过
         if(carList.size()==0){
-            return resultList;
-        }
-        map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
+            map.put("velchels",0);
 
-        map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
+            map.put("times",0);
+        }else {
+            map.put("velchels",Integer.parseInt(carList.get(0).get("count1").toString()));
+
+            map.put("times",Integer.parseInt(carList.get(0).get("count2").toString()));
+        }
 
         resultList.put("data",map);
         resultList.put("geojson",map1);

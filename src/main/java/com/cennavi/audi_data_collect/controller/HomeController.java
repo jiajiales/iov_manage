@@ -155,7 +155,7 @@ public class HomeController {
     @RequestMapping("/getTimesHeat")
     public Map<String,Object> getTimesHeat(@RequestBody ParamsBean paramsBean){
         try{
-            if(paramsBean.getRoadSecList()==null){
+            if(paramsBean.getRoadSecList()==null || paramsBean.getRoadSecList().length==0){
                 return null;
             }
             Map<String,Object> result = homeService.getTimesHeat(paramsBean);
