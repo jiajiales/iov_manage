@@ -99,7 +99,7 @@ public class HomeDao {
         for (Map<String, Object> m : roadList) {
             Map<String,Object> idMap = new HashMap<>();
             idMap.put("segment_id",idMap.get("id"));
-            idMap.put("road_id",idMap.get("rod_id"));
+            idMap.put("road_id",idMap.get("road_id"));
 
             for(int i=0; i<countList.size(); i++){
                 if(Integer.parseInt(m.get("id").toString()) == Integer.parseInt(countList.get(i).get("id").toString())){
