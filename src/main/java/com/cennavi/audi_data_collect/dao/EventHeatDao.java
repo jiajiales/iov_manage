@@ -51,7 +51,7 @@ public class EventHeatDao {
     	String isContinuous = map.get("isContinuous").toString();
     	String sql = "";
     	
-    	sql = "select e.id,e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
+    	sql = "select c.event_id eventid,e.type_code typeId,e.event_name_en typeName,c.geom,st_astext(c.geom) as wkt from collection_info_new c " + 
 				"left join gaosu_segment s on s.id=c.segment_id  " + 
     			"left join event_type e on c.event_type=e.type_code " + 
 				"where 1=1 ";
@@ -75,7 +75,11 @@ public class EventHeatDao {
 			JSONArray eventsList = (JSONArray)map.get("eventsList");
 			String es = "(";
 			for(int i=0;i<eventsList.size();i++) {
-				if(!eventsList.get(i).toString().equals("01"))es += "'" + eventsList.get(i) + "',";
+				if(!eventsList.get(i).toString().equals("01")) {
+					es += "'" + eventsList.get(i) + "',";
+				}else {
+					es += "'111',";
+				}
 			}
 			es = es.substring(0, es.length()-1) + ")";
 			if(eventsList.size()>0 && es.length()>2)sql += " and c.event_type in " + es;

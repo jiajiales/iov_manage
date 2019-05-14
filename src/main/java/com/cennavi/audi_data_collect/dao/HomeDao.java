@@ -61,7 +61,11 @@ public class HomeDao {
         String tile = TileUtils.parseXyz2Bound(x, y, z);
         String roadSql = getRoadSql(paramsBean.getRoadSecList());
 
-        String roadSql2 = " (SELECT road_id FROM gaosu WHERE r_id in "+roadSql+")";
+        String roadSql2 = " (SELECT road_id FROM gaosu ";
+        if(roadSql != null && roadSql.length() > 2) {
+        	roadSql2 += "WHERE r_id in "+roadSql;
+        }
+        roadSql2 += " )";
         String dataSql = getDataSql(paramsBean.getDataList());
         String timeSql = "  BETWEEN '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
 
@@ -127,29 +131,29 @@ public class HomeDao {
         String roadSql = " ";
         if(roads.contains(",")){
             String roadArray[]=roads.split(",");
-            roadSql=" (";
+            roadSql="(";
             for(int i=0;i<roadArray.length;i++){
                 roadSql=roadSql+"'"+roadArray[i]+"'"+",";
             }
             roadSql = roadSql.substring(0,roadSql.length()-1)+")";
         }else{
-            roadSql=" ('"+roads+"')";
+            roadSql="('"+roads+"')";
         }
 
         return roadSql;
     }
 
     private String getSql2(String roads){
-        String roadSql = " ";
+        String roadSql = "";
         if(roads.contains(",")){
             String roadArray[]=roads.split(",");
-            roadSql=" (";
+            roadSql="(";
             for(int i=0;i<roadArray.length;i++){
                 roadSql=roadSql +roadArray[i]+",";
             }
             roadSql = roadSql.substring(0,roadSql.length()-1)+")";
         }else{
-            roadSql=" ( "+roads+" )";
+            roadSql="("+roads+")";
         }
 
         return roadSql;
@@ -160,7 +164,11 @@ public class HomeDao {
         String tile = TileUtils.parseXyz2Bound(x, y, z);
         String roadSql = getSql2(roadSecList);
 
-        String roadSql2 = " (SELECT road_id FROM gaosu WHERE r_id in "+roadSql+")";
+        String roadSql2 = " (SELECT road_id FROM gaosu ";
+        if(roadSql != null && roadSql.length() > 2) {
+        	roadSql2 += "WHERE r_id in "+roadSql;
+        }
+        roadSql2 += " )";
         String dataSql = getSql1(dataList);
         String times[] = timeFrame.split(",");
         String datas[] = dataList.split(",");
@@ -332,7 +340,7 @@ public class HomeDao {
 
     //选多条路
     private String getRoadSql(Integer[] roads_id){
-        String roadSql = " ";
+        String roadSql = "";
         for(int i=0; i<roads_id.length; i++){
             roadSql = roadSql + roads_id[i] +",";
         }
@@ -366,14 +374,20 @@ public class HomeDao {
     public Map<String,Object> getTimesHeat(ParamsBean paramsBean){
        // List<Map<String,Object>> resultList = new ArrayList<>();
         String timeSql = " '"+paramsBean.getTimeFrame()[0]+"' AND '"+paramsBean.getTimeFrame()[1]+"'";
-        String sql1 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE road_id in (SELECT road_id FROM gaosu WHERE r_id in  "+ getRoadSql(paramsBean.getRoadSecList())+" )";
+        
+        String roadSql = getRoadSql(paramsBean.getRoadSecList());
+        String roadSql2 = " (SELECT road_id FROM gaosu ";
+        if(roadSql != null && roadSql.length() > 2) {
+        	roadSql2 += "WHERE r_id in "+roadSql+")";
+        }
+        String sql1 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE road_id in "+ roadSql2;
 
         List<Map<String,Object>> segmentList = jdbcTemplate.queryForList(sql1);
         if(segmentList.size()==0){
             return null;
         }
 
-        String sql2 = "SELECT DISTINCT id FROM gaosu_segment WHERE road_id in (SELECT road_id FROM gaosu where r_id in "+ getRoadSql(paramsBean.getRoadSecList())+" )";
+        String sql2 = "SELECT DISTINCT id FROM gaosu_segment WHERE road_id in "+ roadSql2;
 
         String sql3 = "";
         if(paramsBean.getIsContinuous().equals("true")){      //连续选择时间
