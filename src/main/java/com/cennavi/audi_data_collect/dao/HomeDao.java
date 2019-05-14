@@ -175,7 +175,9 @@ public class HomeDao {
 
         String timeSql = "  BETWEEN '"+times[0]+"' AND '"+times[1]+"'";
 
-        String sql1 = "SELECT st_astext(geom) as geom,id,road_id FROM gaosu_segment a WHERE st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true"+ " AND a.road_id in"+roadSql2 ;
+//        String sql1 = "SELECT st_astext(geom) as geom,id,road_id FROM gaosu_segment a WHERE st_intersects(geom, st_geometryfromtext('"+tile+"', 4326))=true"+ " AND a.road_id in"+roadSql2 ;
+        String sql1 = "SELECT st_astext(a.geom) as geom,a.id,road_id FROM gaosu_segment a,sixth_ring_pology b WHERE st_intersects(a.geom, st_geometryfromtext('"+tile+"', 4326))=true"+
+                " AND st_intersects(b.geom,a.geom) AND a.road_id in"+roadSql2 ;
         List<Map<String,Object>> roadList = jdbcTemplate.queryForList(sql1);
 
         String sql2 = "";
@@ -287,6 +289,23 @@ public class HomeDao {
             segmentId[0] = segmentId[1];
             segmentId[1] = temp;
         }
+        String sql4 = "SELECT st_x(ST_startPoint(geom)) as x1,st_y(ST_startPoint(geom)) as y1 FROM gaosu_segment WHERE id="+segmentId[0];    //起点坐标
+        String sql5 = "SELECT st_x(ST_endPoint(geom)) as x2,st_y(ST_endPoint(geom)) as y2 FROM gaosu_segment WHERE id="+segmentId[1];    //终点坐标
+        List<Map<String,Object>> start = jdbcTemplate.queryForList(sql4);
+        List<Map<String,Object>> end = jdbcTemplate.queryForList(sql5);
+
+        Map<String,Object> startMap = new HashMap<>();
+        if(start.size()>0){
+            startMap.put("lon",start.get(0).get("x1"));
+            startMap.put("lat",start.get(0).get("y1"));
+        }
+        Map<String,Object> endMap = new HashMap<>();
+        if(end.size()>0){
+            endMap.put("lon",end.get(0).get("x2"));
+            endMap.put("lat",end.get(0).get("y2"));
+        }
+        map.put("start",startMap);
+        map.put("end",endMap);
 
         String sql3 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE id BETWEEN "+segmentId[0]+ " AND " +segmentId[1];
         List<Map<String,Object>> geomList = jdbcTemplate.queryForList(sql3);
@@ -380,7 +399,8 @@ public class HomeDao {
         if(roadSql != null && roadSql.length() > 2) {
         	roadSql2 += "WHERE r_id in "+roadSql+")";
         }
-        String sql1 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE road_id in "+ roadSql2;
+ //       String sql1 = "SELECT st_asgeojson(geom,4326) as geom,id FROM gaosu_segment WHERE road_id in "+ roadSql2;
+        String sql1 = "SELECT st_asgeojson(a.geom,4326) as geom,a.id FROM gaosu_segment a,sixth_ring_pology b WHERE st_intersects(b.geom,a.geom) AND road_id in "+ roadSql2;
 
         List<Map<String,Object>> segmentList = jdbcTemplate.queryForList(sql1);
         if(segmentList.size()==0){
