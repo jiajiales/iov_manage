@@ -11,13 +11,22 @@ public class ParamsBean {
     private String dataList[];
     private String dataListFormat[];
     private String eventsList[];
+    private String eventType;
     private String isContinuous;
     private Integer roadSecList[];
     private String sort;
     private String timeFrame[];
     private Integer segmentId[];
 
-    public Integer[] getSegmentId() {
+    public String getEventType() {
+		return eventType;
+	}
+
+	public void setEventType(String eventType) {
+		this.eventType = eventType;
+	}
+
+	public Integer[] getSegmentId() {
         return segmentId;
     }
 

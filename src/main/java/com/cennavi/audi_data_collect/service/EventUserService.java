@@ -25,27 +25,26 @@ public class EventUserService {
 		return eventUserDao.queryEventType();
 	}
 	
-	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIds, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
-		return eventUserDao.queryHistogram(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous,dataLists);
-	}
-	//数据统计
-	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime,
-			String segmentIds, String startTimeFrames, String endTimeFrames,String sort, String isContinuous, String dataLists) {
-		return eventUserDao.dataStatistics(cityName,eventTypes,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,sort,isContinuous,dataLists);
-	}
-	
-	//折线图
-	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous ,String dataLists) {
-		return eventUserDao.brokenLine(cityName,eventType,startTime,endTime,segmentIds,startTimeFrames,endTimeFrames,isContinuous,dataLists);
-	}
 	//数据导出
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
 		return eventUserDao.exportCsvs(paramsBean);
 	}
+	
+	//数据统计
 	public Object dataStatistic(ParamsBean paramsBean) throws Exception {
 		// TODO Auto-generated method stub
 		return eventUserDao.dataStatistic(paramsBean);
+	}
+	
+	//折线图
+	public Object brokenLines(ParamsBean paramsBean) {
+		// TODO Auto-generated method stub
+		return  eventUserDao.brokenLines(paramsBean);
+	}
+	//柱状图
+	public Object queryHistograms(ParamsBean paramsBean) {
+		// TODO Auto-generated method stub
+		return eventUserDao.queryHistograms(paramsBean);
 	}
 
 }

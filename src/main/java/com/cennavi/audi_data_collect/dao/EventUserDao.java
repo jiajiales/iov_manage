@@ -3,7 +3,6 @@ package com.cennavi.audi_data_collect.dao;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +16,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
-import com.cennavi.audi_data_collect.util.CommUtils;
 @Component
 
 public class EventUserDao {
@@ -45,234 +43,8 @@ public class EventUserDao {
 	 
 	}
 	
-	//直方图
-	public Object queryHistogram(String cityName, String eventType, String startTime, String endTime,String segmentIdArr, String startTimeFrames, String endTimeFrames, String isContinuous, String dataLists) {
-		
-		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
-		String sql2="SELECT count(event_id) as num   FROM collection_info_new a LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE  1=1";
-		 
-		if (!cityName.equals("") && cityName!=null) {
-			  sql += " and a.city_name =  '"+cityName+"' ";
-			  sql2 += " and a.city_name =  '"+cityName+"' ";
-		  		}
-		  if (!eventType.equals("") && eventType!=null) {
-			  sql += " and a.event_type =  '"+eventType+"' ";
-			  sql2 += " and a.event_type =  '"+eventType+"' ";
-		  		}
-		 
-		  
-		  if(isContinuous.equals("true")) {  //判断是否连续
-			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-				  
-				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-				  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-
-			  }
-		  }else {
-			  if(dataLists!=null && !dataLists.equals("")) {
-			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-			  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-			  }
-
-		  }
-		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-			  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-			  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-		  }
-		  if ( !segmentIdArr.equals("") &&segmentIdArr!=null) {
-			  
-			  sql += "and d.r_id IN  ( "+segmentIdArr+" ) ";
-			  sql2 += "and d.r_id IN  ( "+segmentIdArr+" ) ";
-		  		}
-		  
-		  sql+=") as hour_table GROUP BY  myhour ORDER BY myhour ASC";
-		  
-		  System.err.println("sql:"+sql);
-		  System.err.println("sql2:"+sql2);
-		 
-		 double k=jdbcTemplate.queryForObject(sql2,double.class);  //获取总数
-		 System.out.println("k:"+k);
-		 List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
-		  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
-		  for (Map<String, Object> map : queryForList) {
-			  Map<String, Object> map2=  new HashMap<String, Object>();
-				 for (String s : map.keySet()) {
-					 map2.put(s, map.get(s));
-					 if(s.equals("mycount")) {
-						 double a=Integer.parseInt(map.get(s).toString());
-						 double n=(double)Math.round(a/k*10000)/100;
-						 if(n==100.00) {
-							 n=99.99;
-						 }
-						 map2.put("percentage",  n);
-					 }
-		            }
-				 
-				 queryForList2.add(map2);
-		}
-		 JSONObject json;
-		 JSONArray jsonArray = new JSONArray();
-		 for (Map<String, Object> map : queryForList2) {//将map转成json格式
-			   json =new JSONObject(map);
-			   jsonArray.add(json);
-		}
-		 
-		return jsonArray;
-	}
-	
-	public Object dataStatistics(String cityName, String eventTypes, String startTime, String endTime, String segmentIds,String startTimeFrames, String endTimeFrames,String sort, String isContinuous, String dataLists ) {
-		String sql="SELECT  t1.event_name_en as typeName ,t1.type_code as typeCode,COALESCE(t2.nums,0) AS  num    from event_type t1  LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  , b.type_name as eventName  FROM  collection_info_new   a   LEFT JOIN   event_type b    ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE 1=1";
-		
-		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b    LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  WHERE 1=1  ";
-		
-		if (!cityName.equals("") && cityName!=null) {
-				  sql += " and a.city_name =  '"+cityName+"' ";
-				  sql2 += " and a.city_name =  '"+cityName+"' ";
-				 
-			  		}
-			  if (!eventTypes.equals("") && eventTypes!=null) {
-				  sql += " and a.event_type IN ( "+eventTypes+" )";
-				  sql2 += " and a.event_type IN ( "+eventTypes+" )";				
-			  		}
-			  
-			  if(isContinuous.equals("true")) {
-				  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-					  
-					  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-					  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-
-				  }
-			  }else {
-				  if(dataLists!=null && !dataLists.equals("")) {
-					  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-					  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-				  }
-				  
-
-			  }
-			 
-			  
-			  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-				  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-				  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-
-			  }
-			  
-			  if ( !segmentIds.equals("") &&segmentIds!=null) {
-				  sql += "and d.r_id IN  ( "+segmentIds+" ) ";
-				  sql2 += "and d.r_id IN  ( "+segmentIds+" ) ";
-				
-			  		}
-			  sql+=" group  by b.type_name   )  t2  ON t2.eventName=t1.type_name ";
-		  
-			  if ( !sort.equals("") &&sort!=null) {
-				  sql += "  order by  num  "+sort+"";
-			  		}
-			  System.err.println("sql:"+sql);
-			  System.err.println("sql2:"+sql2);
-			  double k=jdbcTemplate.queryForObject(sql2,double.class);
-				 System.out.println("k:"+k);
-				
-			  List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
-			  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
-			  for (Map<String, Object> map : queryForList) {
-				  Map<String, Object> map2=  new HashMap<String, Object>();
-					 for (String s : map.keySet()) {
-						 map2.put(s, map.get(s));
-						 if(s.equals("num")) {
-							 double a=Integer.parseInt(map.get(s).toString());
-							 double n=(double)Math.round(a/k*10000)/100;
-							 if(n==100.00) {
-								 n=99.99;
-							 }
-							 map2.put("percentage",  n);
-						 }
-			            }
-					 
-					 queryForList2.add(map2);
-			}
-				JSONObject json;
-				 JSONArray jsonArray = new JSONArray();
-			  for (Map<String, Object> map : queryForList2) {  
-				  json =new JSONObject(map);
-				  jsonArray.add(json);
-			}
-			  	
-		return jsonArray;
-		
-	}
-	//折线图
-	public Object brokenLine(String cityName, String eventType, String startTime, String endTime, String segmentIds, String startTimeFrames, String endTimeFrames,String isContinuous,String dataLists) {
-		String sql="SELECT count(*) as mycount,myhour,road_name,road_id FROM (   SELECT  a.upload_time ,d.en_name as road_name,d.r_id as road_id, date_part('hour',to_timestamp(a.upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour   FROM  collection_info_new a   left join gaosu_segment b  on a.segment_id=b.id  LEFT JOIN gaosu  d  ON b.road_id=d.road_id where 1=1";
-		String sql2="SELECT count(event_id) as num   FROM collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1";
-		if (!cityName.equals("") && cityName!=null) {
-			  sql += " and a.city_name =  '"+cityName+"' ";
-			  sql2 += " and a.city_name =  '"+cityName+"' ";
-		  		}
-		  if (!eventType.equals("") && eventType!=null) {
-			  sql += " and a.event_type =  '"+eventType+"' ";
-			  sql2 += " and  a.event_type =  '"+eventType+"' ";
-		  		}
-		  
-		  if(isContinuous.equals("true")) {  //判断时间是否连续
-			  if (!startTime.equals("") && startTime!=null  && !endTime.equals("") && endTime!=null ) {
-				  
-				  sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-				  sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='"+startTime+"' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '"+endTime+"' ";
-
-			  }
-		  }else {
-			  if(dataLists!=null && !dataLists.equals("")) {
-			  sql +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-			  sql2 +="AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in ("+dataLists+") )";
-			  }
-
-		  }
-		  
-		  
-		  if (!startTimeFrames.equals("") && startTimeFrames!=null  && !endTimeFrames.equals("") && endTimeFrames!=null ) {
-			  sql  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-			  sql2  += " and substring(a.upload_time,12,5)>= '"+startTimeFrames+"' and substring(a.upload_time,12,5)<= '"+endTimeFrames+"'";
-		  }
-		 
-		  if ( !segmentIds.equals("") &&segmentIds!=null) {
-			  sql += "and d.r_id IN  ( "+segmentIds+" ) ";
-			  sql2 += "and d.r_id IN  ( "+segmentIds+" ) ";
-		  		}
-		  
-		  sql+=") as hour_table GROUP BY  myhour,road_name,road_id   ORDER BY myhour ASC";
-		  System.err.println("sql:"+sql);
-		  System.err.println("sql2:"+sql2);
-			 double k=jdbcTemplate.queryForObject(sql2,double.class);
-			 System.out.println("k:"+k);
-			 List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
-			 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
-			
-			 for (Map<String, Object> map : queryForList) {
-				 Map<String, Object> map2=  new HashMap<String, Object>();
-				 for (String s : map.keySet()) {
-					 map2.put(s, map.get(s));
-					 if(s.equals("mycount")) {
-						 double a=Integer.parseInt(map.get(s).toString());
-						 double n=(double)Math.round(a/k*10000)/100;
-						 if(n==100.00) {
-							 n=99.99;
-						 }
-						 map2.put("percentage",n);
-					 }
-		            }
-				 
-				 queryForList2.add(map2);
-			}
-			 JSONObject json;
-			 JSONArray jsonArray = new JSONArray();
-		  for (Map<String, Object> map : queryForList2) {   //将数据转换成json格式
-			  json =new JSONObject(map);
-			   jsonArray.add(json);
-		}
-		  
-	return jsonArray;
-	}
+	 
+	 
 	 
 	public List<CVSBean> exportCsvs(ParamsBean paramsBean) throws ParseException {
 		String sql="SELECT  a.event_id,COALESCE(b.event_name_en, '0') as type_name,d.en_name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,8) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
@@ -364,6 +136,8 @@ public class EventUserDao {
 		}
 			return list;
 	}
+	
+//	数据统计
 	public Object dataStatistic(ParamsBean paramsBean) throws Exception {
 		String sql="SELECT  t1.event_name_en as typeName ,t1.type_code as typeCode,COALESCE(t2.nums,0) AS  num    from event_type t1  LEFT JOIN  ( SELECT COALESCE(count(a.event_id), 0) as nums  , b.type_name as eventName  FROM  collection_info_new   a   LEFT JOIN   event_type b    ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE 1=1";
 		String sql2="SELECT COALESCE(count(a.event_id), 0) as nums   FROM event_type b    LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  WHERE 1=1  ";
@@ -467,6 +241,187 @@ public class EventUserDao {
 		}
 		  
 		return jsonArray;
+	}
+	public Object brokenLines(ParamsBean paramsBean) {
+		String sql="SELECT count(*) as mycount,myhour,road_name,road_id FROM (   SELECT  a.upload_time ,d.en_name as road_name,d.r_id as road_id, date_part('hour',to_timestamp(a.upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour   FROM  collection_info_new a   left join gaosu_segment b  on a.segment_id=b.id  LEFT JOIN gaosu  d  ON b.road_id=d.road_id where 1=1";
+		String sql2="SELECT count(event_id) as num   FROM collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1";
+		
+		if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
+			  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
+			  sql2 += " and a.city_name =  '"+paramsBean.getCity()+"' ";
+		  		}
+		  if (!	paramsBean.getEventType().equals("") && 	paramsBean.getEventType()!=null) {
+			  sql += " and a.event_type =  '"+paramsBean.getEventType()+"' ";
+			  sql2 += " and  a.event_type =  '"+paramsBean.getEventType()+"' ";
+		  		}
+			
+		  if(paramsBean.getDataList() != null) {
+				if(paramsBean.getIsContinuous().equals("true")) {
+					
+					if(paramsBean.getDataList().length>0) {
+						sql += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+						sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+					}
+		    	}else {
+		    		String es2 = "(";
+					for(int i=0;i<paramsBean.getDataList().length;i++) {
+						es2 += "'" + paramsBean.getDataList()[i] + "',";
+					}
+					es2 = es2.substring(0, es2.length()-1) + ")";
+					if(paramsBean.getDataList().length>0)
+					{
+						sql += " and substring(a.upload_time,0,11) in "+es2;
+						sql2 += " and substring(a.upload_time,0,11) in "+es2;
+					}
+						
+		    	}
+			}
+			
+		 
+		  if(paramsBean.getTimeFrame()!= null ) {
+				if(paramsBean.getTimeFrame().length>0)
+				{
+					sql += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+				    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+				}
+			}
+			if(paramsBean.getRoadSecList() != null) {
+				String es1 = "(";
+				for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+					es1 += paramsBean.getRoadSecList()[i] + ",";
+				}
+				es1 = es1.substring(0, es1.length()-1) + ")";
+				if(paramsBean.getRoadSecList().length>0)
+					{
+					sql += " and d.r_id in "+es1;
+					sql2 += " and d.r_id in "+es1;
+					}
+			}
+			
+		  
+		  sql+=") as hour_table GROUP BY  myhour,road_name,road_id   ORDER BY myhour ASC";
+		  System.err.println("sql:"+sql);
+		  System.err.println("sql2:"+sql2);
+			 double k=jdbcTemplate.queryForObject(sql2,double.class);
+			 System.out.println("k:"+k);
+			 List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+			 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+			
+			 for (Map<String, Object> map : queryForList) {
+				 Map<String, Object> map2=  new HashMap<String, Object>();
+				 for (String s : map.keySet()) {
+					 map2.put(s, map.get(s));
+					 if(s.equals("mycount")) {
+						 double a=Integer.parseInt(map.get(s).toString());
+						 double n=(double)Math.round(a/k*10000)/100;
+						 if(n==100.00) {
+							 n=99.99;
+						 }
+						 map2.put("percentage",n);
+					 }
+		            }
+				 
+				 queryForList2.add(map2);
+			}
+			 JSONObject json;
+			 JSONArray jsonArray = new JSONArray();
+		  for (Map<String, Object> map : queryForList2) {   //将数据转换成json格式
+			  json =new JSONObject(map);
+			   jsonArray.add(json);
+		}
+		  
+	return jsonArray;
+	}
+	public Object queryHistograms(ParamsBean paramsBean) {
+		String sql="SELECT count(*) as mycount,myhour FROM (  SELECT  upload_time , date_part('hour',to_timestamp(upload_time,'yyyy-MM-dd hh24:mi:ss')) as myhour  FROM  collection_info_new a  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE  1=1";
+		String sql2="SELECT count(event_id) as num   FROM collection_info_new a LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id   LEFT JOIN gaosu  d  ON c.road_id=d.road_id WHERE  1=1";
+				if (!paramsBean.getCity().equals("") && paramsBean.getCity()!=null) {
+			  sql += " and a.city_name =  '"+paramsBean.getCity()+"' ";
+			  sql2 += " and a.city_name =  '"+paramsBean.getCity()+"' ";
+		  		}
+		  if (!	paramsBean.getEventType().equals("") && 	paramsBean.getEventType()!=null) {
+			  sql += " and a.event_type =  '"+paramsBean.getEventType()+"' ";
+			  sql2 += " and  a.event_type =  '"+paramsBean.getEventType()+"' ";
+		  		}
+			
+		  if(paramsBean.getDataList() != null) {
+				if(paramsBean.getIsContinuous().equals("true")) {
+					
+					if(paramsBean.getDataList().length>0) {
+						sql += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+						sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+					}
+		    	}else {
+		    		String es2 = "(";
+					for(int i=0;i<paramsBean.getDataList().length;i++) {
+						es2 += "'" + paramsBean.getDataList()[i] + "',";
+					}
+					es2 = es2.substring(0, es2.length()-1) + ")";
+					if(paramsBean.getDataList().length>0)
+					{
+						sql += " and substring(a.upload_time,0,11) in "+es2;
+						sql2 += " and substring(a.upload_time,0,11) in "+es2;
+					}
+						
+		    	}
+			}
+			
+		 
+		  if(paramsBean.getTimeFrame()!= null ) {
+				if(paramsBean.getTimeFrame().length>0)
+				{
+					sql += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+				    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+				}
+			}
+			if(paramsBean.getRoadSecList() != null) {
+				String es1 = "(";
+				for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+					es1 += paramsBean.getRoadSecList()[i] + ",";
+				}
+				es1 = es1.substring(0, es1.length()-1) + ")";
+				if(paramsBean.getRoadSecList().length>0)
+					{
+					sql += " and d.r_id in "+es1;
+					sql2 += " and d.r_id in "+es1;
+					}
+			}
+			
+			  sql+=") as hour_table GROUP BY  myhour ORDER BY myhour ASC";
+			  
+			  System.err.println("sql:"+sql);
+			  System.err.println("sql2:"+sql2);
+			 
+			 double k=jdbcTemplate.queryForObject(sql2,double.class);  //获取总数
+			 System.out.println("k:"+k);
+			 List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+			  List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+			  for (Map<String, Object> map : queryForList) {
+				  Map<String, Object> map2=  new HashMap<String, Object>();
+					 for (String s : map.keySet()) {
+						 map2.put(s, map.get(s));
+						 if(s.equals("mycount")) {
+							 double a=Integer.parseInt(map.get(s).toString());
+							 double n=(double)Math.round(a/k*10000)/100;
+							 if(n==100.00) {
+								 n=99.99;
+							 }
+							 map2.put("percentage",  n);
+						 }
+			            }
+					 
+					 queryForList2.add(map2);
+			}
+			 JSONObject json;
+			 JSONArray jsonArray = new JSONArray();
+			 for (Map<String, Object> map : queryForList2) {//将map转成json格式
+				   json =new JSONObject(map);
+				   jsonArray.add(json);
+			}
+			 
+			return jsonArray;
 	}
 
 }
