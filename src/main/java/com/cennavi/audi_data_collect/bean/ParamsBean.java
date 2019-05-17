@@ -17,8 +17,37 @@ public class ParamsBean {
     private String sort;
     private String timeFrame[];
     private Integer segmentId[];
+    private Integer offset; 
+    private Integer limit;
+    private String eventId;
 
-    public String getEventType() {
+     
+
+	public String getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(String eventId) {
+		this.eventId = eventId;
+	}
+
+	public Integer getOffset() {
+		return offset;
+	}
+
+	public void setOffset(Integer offset) {
+		this.offset = offset;
+	}
+
+	public Integer getLimit() {
+		return limit;
+	}
+
+	public void setLimit(Integer limit) {
+		this.limit = limit;
+	}
+
+	public String getEventType() {
 		return eventType;
 	}
 

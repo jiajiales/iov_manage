@@ -1,5 +1,9 @@
 package com.cennavi.audi_data_collect.dao;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,10 +15,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.EventPV;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 @Component
 
@@ -422,6 +428,353 @@ public class EventUserDao {
 			}
 			 
 			return jsonArray;
+	}
+	
+	//图片
+	public Object findImages(ParamsBean paramsBean) throws IOException {
+		String sql="SELECT count(a.event_id) FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+		String sql2="SELECT a.event_id ,a.lon ,a.lat,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+if(paramsBean.getEventId()!=null  && !paramsBean.getEventId().equals("")) {
+	sql2 += " and a.event_id="+paramsBean.getEventId()+"";
+	 JSONObject json;
+	 JSONArray jsonArray = new JSONArray();
+		List<Map<String, Object>> queryForList0 = jdbcTemplate.queryForList(sql2);
+
+  for (Map<String, Object> map : queryForList0) {   //将数据转换成json格式
+	  json =new JSONObject(map);
+	   jsonArray.add(json);
+}
+  return jsonArray;
+}else {
+	
+	if(paramsBean.getCity()!= null && !paramsBean.getCity().equals("")) {
+		sql += " and a.city_name='"+paramsBean.getCity()+"'";
+		sql2 += " and a.city_name='"+paramsBean.getCity()+"'";
+	}
+	
+	if(paramsBean.getDataList() != null) {
+		if(paramsBean.getIsContinuous().equals("true")) {
+			
+			if(paramsBean.getDataList().length>0) {
+				sql += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+				sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+			}
+    	}else {
+    		String es2 = "(";
+			for(int i=0;i<paramsBean.getDataList().length;i++) {
+				es2 += "'" + paramsBean.getDataList()[i] + "',";
+			}
+			es2 = es2.substring(0, es2.length()-1) + ")";
+			if(paramsBean.getDataList().length>0)
+			{
+				sql += " and substring(a.upload_time,0,11) in "+es2;
+				sql2 += " and substring(a.upload_time,0,11) in "+es2;
+			}
+				
+    	}
+	}
+	
+	
+	if(paramsBean.getEventsList() != null) {
+		String es = "(";
+		for(int i=0;i<paramsBean.getEventsList().length;i++) {
+				es += "'" + paramsBean.getEventsList()[i] + "',";
+		}
+		es = es.substring(0, es.length()-1) + ")";
+		if(paramsBean.getEventsList().length>0)
+		{
+			sql += " and a.event_type in " + es;
+			sql2 += " and a.event_type in " + es;
+		}
+			
+	}
+	
+	if(paramsBean.getTimeFrame()!= null ) {
+		if(paramsBean.getTimeFrame().length>0)
+		{
+		    sql += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+		    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+		}
+	}
+	if(paramsBean.getRoadSecList() != null) {
+		String es1 = "(";
+		for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+			es1 += paramsBean.getRoadSecList()[i] + ",";
+		}
+		es1 = es1.substring(0, es1.length()-1) + ")";
+		if(paramsBean.getRoadSecList().length>0)
+			{
+			sql += " and d.r_id in "+es1;
+			sql2 += " and d.r_id in "+es1;
+			}
+	}
+	
+	sql2 += "ORDER BY a.upload_time  ASC";
+	Integer n = jdbcTemplate.queryForObject(sql, Integer.class);
+	
+	  if(paramsBean.getLimit()!= null && paramsBean.getOffset()!= null ) {
+	  sql2 += " LIMIT "+paramsBean.getLimit()+" OFFSET "+paramsBean.getOffset()+"";  
+	  }
+	  
+	  System.err.println("sql2:"+sql2);
+	  
+	 
+	List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql2);
+	 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+	  for (Map<String, Object> map : queryForList) {
+		  Map<String, Object> map2=  new HashMap<String, Object>();
+			 for (String s : map.keySet()) {
+				 map2.put(s, map.get(s));
+				 if(s.equals("event_id")) {
+
+					 String filePath="http://117.51.149.90/images/"+map.get(s)+".png";
+					  URL url = new URL(filePath);
+					 HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+                      String message = urlcon.getHeaderField(0);
+					 if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+						 String filePath2="http://117.51.149.90/images/"+map.get(s)+".jpg";
+						 map2.put("imageUrl",  filePath2);
+						 }else{
+							 map2.put("imageUrl",  filePath);
+	                      }
+					
+					 map2.put("videoUrl",  "http://117.51.149.90/videos/"+map.get(s)+".mp4");
+				 }
+	            }
+			 
+			 queryForList2.add(map2);
+	}
+	 JSONObject json;
+	 JSONArray jsonArray = new JSONArray();
+	 for (Map<String, Object> map : queryForList2) {//将map转成json格式
+		   json =new JSONObject(map);
+		   jsonArray.add(json);
+	}
+	 
+	 Map<String, Object> map3=  new HashMap<String, Object>();
+	 map3.put("num", n);
+	 map3.put("data", queryForList2);
+	 JSONObject json2 =new JSONObject(map3);
+	 jsonArray.add(json2);
+	 
+	return json2;
+}
+		
+	}
+	public Object editImageDescription(EventPV eventPV) {
+		
+		JSONObject json;
+		Map<String, Object> map =new HashMap<String, Object>();
+		map.put("message", "add description failure");
+		if(eventPV.getEventId() !=null && !eventPV.getEventId().equals("")) {
+			
+			String sql0="SELECT count(id) FROM event_images_info WHERE  event_id="+eventPV.getEventId()+"";
+			int i=jdbcTemplate.queryForObject(sql0, Integer.class);
+			if(i==0) {
+				String sql="INSERT INTO  event_images_info  (id,event_id,description,upload_time) VALUES (?,?,?,?)";
+				SimpleDateFormat fdate=new SimpleDateFormat("yyyyMMddHHmmss");
+				 String str=fdate.format(new Date());
+				jdbcTemplate.update(sql,str,eventPV.getEventId(),eventPV.getDescription(),"LOCALTIMESTAMP (0)");
+				map.put("message", "add description success");
+				
+			}
+			if(i==1) {
+				String sql2 = "UPDATE event_images_info	SET description=? 	WHERE event_id=?";
+				jdbcTemplate.update(sql2,eventPV.getDescription(),eventPV.getEventId());
+				map.put("message", "edit description success");
+			}
+			
+		}
+		 json =new JSONObject(map);
+			return json;
+		
+	}
+	public Object addVideoComment(EventPV eventPV) {
+		JSONObject json;
+		Map<String, Object> map =new HashMap<String, Object>();
+		map.put("message", "add comment failure");
+		if(eventPV.getEventId()!=null && eventPV.getComment()!=null) {
+			String sql="INSERT INTO  event_videos_info  (id,event_id,comment,upload_time) VALUES (?,?,?,?)";
+			
+			 SimpleDateFormat fdate=new SimpleDateFormat("yyyyMMddHHmmss");
+			 String str=fdate.format(new Date());
+			eventPV.setUploadTime("LOCALTIMESTAMP (0)");
+			jdbcTemplate.update(sql,str,eventPV.getEventId(),eventPV.getComment(),eventPV.getUploadTime());
+			map.put("message", "add comment success");
+		}
+		 json =new JSONObject(map);
+			return json;
+	}
+	public Object findVideoCommentList(EventPV eventPV) {
+		
+		
+		if(eventPV.getEventId()!=null) {
+			String sql="SELECT * FROM event_videos_info WHERE  event_id="+eventPV.getEventId()+"";
+			List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+		
+		
+//		 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+//		  for (Map<String, Object> map : queryForList) {
+//			  Map<String, Object> map2=  new HashMap<String, Object>();
+//				 for (String s : map.keySet()) {
+//					 map2.put(s, map.get(s));
+//		            }
+//				 
+//				 queryForList2.add(map2);
+//		}
+		 JSONObject json;
+		 JSONArray jsonArray = new JSONArray();
+		 for (Map<String, Object> map : queryForList) {//将map转成json格式
+			   json =new JSONObject(map);
+			   jsonArray.add(json);
+		}
+		return jsonArray;
+		}
+		
+		return  false;
+	}
+	public List<EventPV> exportCsv() {
+		
+		String sql="SELECT event_id   ,LOCALTIMESTAMP (0) as upload_time FROM collection_info_new  WHERE substring(upload_time,0,11) in ('2019-04-08')";
+		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+		
+		 List<EventPV> list=new ArrayList<EventPV>();
+		 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
+		 int i=1;
+		  for (Map<String, Object> map : queryForList) {
+			  Map<String, Object> map2=  new HashMap<String, Object>();
+			 
+				 for (String s : map.keySet()) {
+					 map2.put(s, map.get(s));
+					 if(s.equals("event_id")) {
+						 map2.put("comment",  "video"+map.get(s)+"comment");
+						 map2.put("id", i );
+						 i++;
+					 }
+		            }
+				 
+				 queryForList2.add(map2);
+		}
+		  System.err.println(i);
+		  for (Map<String, Object> map : queryForList2) {
+			  EventPV eventPV =new EventPV();
+			  for (String s : map.keySet()) {
+				 
+				  if(s.equals("id")) {
+					  eventPV.setId(map.get(s).toString());
+					 
+				  }
+				  if(s.equals("event_id")) {
+					  eventPV.setEventId((Integer) map.get(s));
+//					  System.err.println((Integer) map.get(s));
+				  }
+				  if(s.equals("comment")) {
+					  eventPV.setComment(map.get(s).toString());;
+//					  System.err.println(map.get(s).toString());
+				  }
+				  if(s.equals("upload_time")) {
+					  eventPV.setUploadTime(map.get(s).toString());
+				  }
+				  
+				  
+			  }
+			  System.err.println("id:"+eventPV.getId()+"EventId:"+eventPV.getEventId()+"Description:"+eventPV.getDescription()+"UploadTime:"+eventPV.getUploadTime());
+			  list.add(eventPV);
+		}
+		 System.err.println(list.size());
+		return list;
+	}
+	public List<String> findImagesUrl(ParamsBean paramsBean) throws IOException {
+		String sql2="SELECT a.event_id FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+
+		if(paramsBean.getCity()!= null && !paramsBean.getCity().equals("")) {
+			sql2 += " and a.city_name='"+paramsBean.getCity()+"'";
+		}
+		
+		if(paramsBean.getDataList() != null) {
+			if(paramsBean.getIsContinuous().equals("true")) {
+				
+				if(paramsBean.getDataList().length>0) {
+
+					sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+				}
+	    	}else {
+	    		String es2 = "(";
+				for(int i=0;i<paramsBean.getDataList().length;i++) {
+					es2 += "'" + paramsBean.getDataList()[i] + "',";
+				}
+				es2 = es2.substring(0, es2.length()-1) + ")";
+				if(paramsBean.getDataList().length>0)
+				{
+					sql2 += " and substring(a.upload_time,0,11) in "+es2;
+				}
+					
+	    	}
+		}
+		
+		
+		if(paramsBean.getEventsList() != null) {
+			String es = "(";
+			for(int i=0;i<paramsBean.getEventsList().length;i++) {
+					es += "'" + paramsBean.getEventsList()[i] + "',";
+			}
+			es = es.substring(0, es.length()-1) + ")";
+			if(paramsBean.getEventsList().length>0)
+			{
+				sql2 += " and a.event_type in " + es;
+			}
+				
+		}
+		
+		if(paramsBean.getTimeFrame()!= null ) {
+			if(paramsBean.getTimeFrame().length>0)
+			{
+			    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+			}
+		}
+		if(paramsBean.getRoadSecList() != null) {
+			String es1 = "(";
+			for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+				es1 += paramsBean.getRoadSecList()[i] + ",";
+			}
+			es1 = es1.substring(0, es1.length()-1) + ")";
+			if(paramsBean.getRoadSecList().length>0)
+				{
+				sql2 += " and d.r_id in "+es1;
+				}
+		}
+		
+		sql2 += "ORDER BY a.upload_time  ASC";
+		
+		  
+		  
+		  System.err.println("sql2:"+sql2);
+		  List<String> list =new  ArrayList<String>();
+		 
+		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql2);
+		  for (Map<String, Object> map : queryForList) {
+				 for (String s : map.keySet()) {
+					 if(s.equals("event_id")) {
+						 String filePath="http://117.51.149.90/images/"+map.get(s)+".png";
+						  URL url = new URL(filePath);
+						 HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+	                      String message = urlcon.getHeaderField(0);
+						 if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+							 String filePath2="http://117.51.149.90/images/"+map.get(s)+".jpg";
+							  list.add(filePath2);
+							 }else{
+		                    	  list.add(filePath);
+		                      }
+						
+					 }
+		            }
+				 
+		}
+		
+		return list;
 	}
 
 }

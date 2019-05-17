@@ -1,22 +1,37 @@
 package com.cennavi.audi_data_collect.controller;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.EventPV;
 import com.cennavi.audi_data_collect.bean.ExcelData;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.bean.User;
 import com.cennavi.audi_data_collect.service.EventUserService;
+import com.cennavi.audi_data_collect.util.CSVUtil;
 import com.cennavi.audi_data_collect.util.ExcelOutPutUtils;
 
 @RestController
@@ -98,4 +113,107 @@ public class EventUserController {
 			public Object queryHistograms(@RequestBody ParamsBean paramsBean) throws Exception{
 				return eventUserService.queryHistograms(paramsBean);
 			}
+			
+			//图片+视频地址
+			@RequestMapping(value = "/findImages")
+			public Object findImages(@RequestBody ParamsBean paramsBean) throws Exception{
+				return eventUserService.findImages(paramsBean);
+			}
+			
+			//编辑图片描述
+			@RequestMapping(value = "/editImageDescription")
+			public Object editImageDescription(@RequestBody EventPV eventPV) throws Exception{
+				return eventUserService.editImageDescription(eventPV);
+			}
+			
+			//添加视频评论
+			@RequestMapping(value = "/addVideoComment")
+			public Object addVideoComment(@RequestBody EventPV eventPV) throws Exception{
+				return eventUserService.addVideoComment(eventPV);
+			}
+			
+			//视频评论列表
+			@RequestMapping(value = "/findVideoCommentList")
+			public Object findVideoCommentList(@RequestBody EventPV eventPV) throws Exception{
+				return eventUserService.findVideoCommentList(eventPV);
+			}
+			
+            @RequestMapping(value = "/exportCsv")
+					public Object exportCsv(HttpServletResponse response) throws ParseException   {
+            	      
+					  List<EventPV> list=	eventUserService.exportCsv();
+				        HashMap map = new LinkedHashMap();
+				        map.put("1", "id");
+				        map.put("2", "event_id");
+				        map.put("3", "comment");
+				        map.put("4", "upload_time");
+				        String fileds[] = new String[] { "id","eventId", "comment","uploadTime"};
+				        try {
+							CSVUtil.exportFile(response, map, list, fileds);
+							/*
+							 * response：直接传入response
+							 * map：对应文件的第一行 
+							 * list：对应 List<CVSBean>  list对象形式
+							 * fileds：对应每一列的数据
+							 * */
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}//直接调用
+
+		            
+			        return null;
+			    }
+            
+            @RequestMapping(value = "/downloadImages")
+            public void download(@RequestBody ParamsBean paramsBean,HttpServletRequest request, HttpServletResponse response) throws IOException{
+            	 
+            	List<String> list=eventUserService.findImagesUrl(paramsBean);
+            	
+            	
+            	
+            	
+                try {
+                	   String downloadFilename = "Export_images.zip";//文件的名称
+                    downloadFilename = URLEncoder.encode(downloadFilename, "UTF-8");//转换中文否则可能会产生乱码
+                    response.setContentType("application/octet-stream");// 指明response的返回对象是文件流
+                    response.setHeader("Content-Disposition", "attachment;filename=" + downloadFilename);// 设置在下载框默认显示的文件名
+                    ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
+                    String[] files = new String[]{"http://117.51.149.90/images/1137.png","http://117.51.149.90/images/1138.png"};
+                    for (String str : list) {
+                  	  URL url = new URL(str);
+                        String dell = "http://117.51.149.90/images/";
+                      String fileName  =str.replace(dell,"");
+                      
+//                      URL serverUrl = new URL("http://localhost:8090/Demo/clean.sql");
+                      HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+
+                      String message = urlcon.getHeaderField(0);
+                      //判断远程服务器是不是有这个文件  如果有就下载,没有就continue
+                      if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+                        continue;
+                      }else{
+                    	  zos.putNextEntry(new ZipEntry(fileName));
+                          //FileInputStream fis = new FileInputStream(new File(files[i])); 
+                          InputStream fis = url.openConnection().getInputStream();  
+                          byte[] buffer = new byte[1024];    
+                          int r = 0;    
+                          while ((r = fis.read(buffer)) != -1) {    
+                              zos.write(buffer, 0, r);    
+                          }    
+                          fis.close();  
+                      }
+                      
+                      
+                    }
+                    zos.flush();    
+                    zos.close();
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } 
+        }
 }

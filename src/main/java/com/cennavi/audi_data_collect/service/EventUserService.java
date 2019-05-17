@@ -1,13 +1,16 @@
 package com.cennavi.audi_data_collect.service;
 
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.cennavi.audi_data_collect.bean.CVSBean;
+import com.cennavi.audi_data_collect.bean.EventPV;
 import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.dao.EventUserDao;
 
@@ -45,6 +48,29 @@ public class EventUserService {
 	public Object queryHistograms(ParamsBean paramsBean) {
 		// TODO Auto-generated method stub
 		return eventUserDao.queryHistograms(paramsBean);
+	}
+	public Object findImages(ParamsBean paramsBean) throws IOException {
+		
+	        return eventUserDao.findImages(paramsBean);
+	}
+	public Object editImageDescription(EventPV eventPV) {
+		return eventUserDao.editImageDescription(eventPV);
+	}
+	public Object addVideoComment(EventPV eventPV) {
+		// TODO Auto-generated method stub
+		return eventUserDao.addVideoComment(eventPV);
+	}
+	public Object findVideoCommentList(EventPV eventPV) {
+		// TODO Auto-generated method stub
+		return eventUserDao.findVideoCommentList(eventPV);
+	}
+	public List<EventPV> exportCsv() {
+		// TODO Auto-generated method stub
+		return eventUserDao.exportCsv();
+	}
+	public List<String> findImagesUrl(ParamsBean paramsBean) throws IOException {
+		// TODO Auto-generated method stub
+		return eventUserDao.findImagesUrl(paramsBean);
 	}
 
 }
