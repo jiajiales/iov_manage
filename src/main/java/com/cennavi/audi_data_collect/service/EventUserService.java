@@ -72,5 +72,13 @@ public class EventUserService {
 		// TODO Auto-generated method stub
 		return eventUserDao.findImagesUrl(paramsBean);
 	}
+	public List<String> findVideosUrl(ParamsBean paramsBean) throws IOException {
+		// TODO Auto-generated method stub
+		return eventUserDao.findVideosUrl(paramsBean);
+	}
+	public Object getVideo(ParamsBean paramsBean) throws IOException {
+		// TODO Auto-generated method stub
+		return eventUserDao.getVideo(paramsBean);
+	}
 
 }

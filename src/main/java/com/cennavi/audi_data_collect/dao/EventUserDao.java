@@ -510,8 +510,8 @@ if(paramsBean.getEventId()!=null  && !paramsBean.getEventId().equals("")) {
 			sql2 += " and d.r_id in "+es1;
 			}
 	}
-	
-	sql2 += "ORDER BY a.upload_time  ASC";
+	if(paramsBean.getSort() != null && !paramsBean.getSort().equals("")) {}
+	sql2 += "ORDER BY a.upload_time  "+paramsBean.getSort()+"";
 	Integer n = jdbcTemplate.queryForObject(sql, Integer.class);
 	
 	  if(paramsBean.getLimit()!= null && paramsBean.getOffset()!= null ) {
@@ -535,17 +535,26 @@ if(paramsBean.getEventId()!=null  && !paramsBean.getEventId().equals("")) {
                       String message = urlcon.getHeaderField(0);
 					 if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
 						 String filePath2="http://117.51.149.90/images/"+map.get(s)+".jpg";
-						 map2.put("imageUrl",  filePath2);
+						  URL url2 = new URL(filePath2);
+							 HttpURLConnection urlcon2 = (HttpURLConnection) url2.openConnection();
+		                      String message2 = urlcon2.getHeaderField(0);
+							 if (StringUtils.hasText(message2) && message2.startsWith("HTTP/1.1 404")) {
+								 map2.put("imageUrl",  "");
+							 }else {
+								 map2.put("imageUrl",  filePath2);
+							 }
+						
 						 }else{
 							 map2.put("imageUrl",  filePath);
 	                      }
 					
-					 map2.put("videoUrl",  "http://117.51.149.90/videos/"+map.get(s)+".mp4");
+//					 map2.put("videoUrl",  "http://117.51.149.90/videos/"+map.get(s)+".mp4");
 				 }
 	            }
 			 
 			 queryForList2.add(map2);
 	}
+	  
 	 JSONObject json;
 	 JSONArray jsonArray = new JSONArray();
 	 for (Map<String, Object> map : queryForList2) {//将map转成json格式
@@ -775,6 +784,107 @@ if(paramsBean.getEventId()!=null  && !paramsBean.getEventId().equals("")) {
 		}
 		
 		return list;
+	}
+	public List<String> findVideosUrl(ParamsBean paramsBean) throws IOException {
+		String sql2="SELECT a.event_id FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+
+		if(paramsBean.getCity()!= null && !paramsBean.getCity().equals("")) {
+			sql2 += " and a.city_name='"+paramsBean.getCity()+"'";
+		}
+		
+		if(paramsBean.getDataList() != null) {
+			if(paramsBean.getIsContinuous().equals("true")) {
+				
+				if(paramsBean.getDataList().length>0) {
+
+					sql2 += " and substring(a.upload_time,0,11) between '"+paramsBean.getDataList()[0]+"' and '"+paramsBean.getDataList()[1]+"'";
+
+				}
+	    	}else {
+	    		String es2 = "(";
+				for(int i=0;i<paramsBean.getDataList().length;i++) {
+					es2 += "'" + paramsBean.getDataList()[i] + "',";
+				}
+				es2 = es2.substring(0, es2.length()-1) + ")";
+				if(paramsBean.getDataList().length>0)
+				{
+					sql2 += " and substring(a.upload_time,0,11) in "+es2;
+				}
+					
+	    	}
+		}
+		
+		
+		if(paramsBean.getEventsList() != null) {
+			String es = "(";
+			for(int i=0;i<paramsBean.getEventsList().length;i++) {
+					es += "'" + paramsBean.getEventsList()[i] + "',";
+			}
+			es = es.substring(0, es.length()-1) + ")";
+			if(paramsBean.getEventsList().length>0)
+			{
+				sql2 += " and a.event_type in " + es;
+			}
+				
+		}
+		
+		if(paramsBean.getTimeFrame()!= null ) {
+			if(paramsBean.getTimeFrame().length>0)
+			{
+			    sql2 += " and substring(a.upload_time,12,5) between '"+paramsBean.getTimeFrame()[0]+"' and '"+paramsBean.getTimeFrame()[1]+"'";
+			}
+		}
+		if(paramsBean.getRoadSecList() != null) {
+			String es1 = "(";
+			for(int i=0;i<paramsBean.getRoadSecList().length;i++) {
+				es1 += paramsBean.getRoadSecList()[i] + ",";
+			}
+			es1 = es1.substring(0, es1.length()-1) + ")";
+			if(paramsBean.getRoadSecList().length>0)
+				{
+				sql2 += " and d.r_id in "+es1;
+				}
+		}
+		
+		sql2 += "ORDER BY a.upload_time  ASC";
+		
+		  
+		  
+		  System.err.println("sql2:"+sql2);
+		  List<String> list =new  ArrayList<String>();
+		 
+		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql2);
+		  for (Map<String, Object> map : queryForList) {
+				 for (String s : map.keySet()) {
+					 if(s.equals("event_id")) {
+						 String filePath="http://117.51.149.90/videos/"+map.get(s)+".mp4";
+		                   list.add(filePath);
+					 }
+		            }
+				 
+		}
+		
+		return list;
+	}
+	public Object getVideo(ParamsBean paramsBean) throws IOException {
+		Map<String, Object> map = new HashMap<String, Object>();
+		if(paramsBean.getEventId()!=null && !paramsBean.getEventId().equals("")) {
+			String filePath="http://117.51.149.90/videos/"+paramsBean.getEventId()+".mp4";
+			  URL url = new URL(filePath);
+			 HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+	         String message = urlcon.getHeaderField(0);
+			 if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+				 map.put("videoPath", "");
+				 }else{
+					 map.put("videoPath", filePath);
+	             }
+		}
+		
+		 
+		 
+		 
+		JSONObject json =new JSONObject(map);
+		return json;
 	}
 
 }

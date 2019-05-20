@@ -114,10 +114,15 @@ public class EventUserController {
 				return eventUserService.queryHistograms(paramsBean);
 			}
 			
-			//图片+视频地址
+			//图片列表
 			@RequestMapping(value = "/findImages")
 			public Object findImages(@RequestBody ParamsBean paramsBean) throws Exception{
 				return eventUserService.findImages(paramsBean);
+			}
+			//获取视频地址
+			@RequestMapping(value = "/getVideo")
+			public Object getVideo(@RequestBody ParamsBean paramsBean) throws Exception{
+				return eventUserService.getVideo(paramsBean);
 			}
 			
 			//编辑图片描述
@@ -166,13 +171,8 @@ public class EventUserController {
 			    }
             
             @RequestMapping(value = "/downloadImages")
-            public void download(@RequestBody ParamsBean paramsBean,HttpServletRequest request, HttpServletResponse response) throws IOException{
-            	 
+            public void downloadImages(@RequestBody ParamsBean paramsBean,HttpServletRequest request, HttpServletResponse response) throws IOException{
             	List<String> list=eventUserService.findImagesUrl(paramsBean);
-            	
-            	
-            	
-            	
                 try {
                 	   String downloadFilename = "Export_images.zip";//文件的名称
                     downloadFilename = URLEncoder.encode(downloadFilename, "UTF-8");//转换中文否则可能会产生乱码
@@ -184,10 +184,8 @@ public class EventUserController {
                   	  URL url = new URL(str);
                         String dell = "http://117.51.149.90/images/";
                       String fileName  =str.replace(dell,"");
-                      
 //                      URL serverUrl = new URL("http://localhost:8090/Demo/clean.sql");
                       HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
-
                       String message = urlcon.getHeaderField(0);
                       //判断远程服务器是不是有这个文件  如果有就下载,没有就continue
                       if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
@@ -216,4 +214,84 @@ public class EventUserController {
                     e.printStackTrace();
                 } 
         }
+            
+            
+            @RequestMapping(value = "/downloadVideos")
+            public void downloadVideos(@RequestBody ParamsBean paramsBean,HttpServletRequest request, HttpServletResponse response) throws IOException{
+            	List<String> list=eventUserService.findVideosUrl(paramsBean);
+                try {
+                	   String downloadFilename = "Export_videos.zip";//文件的名称
+                    downloadFilename = URLEncoder.encode(downloadFilename, "UTF-8");//转换中文否则可能会产生乱码
+                    response.setContentType("application/octet-stream");// 指明response的返回对象是文件流
+                    response.setHeader("Content-Disposition", "attachment;filename=" + downloadFilename);// 设置在下载框默认显示的文件名
+                    ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
+                    String[] files = new String[]{"http://117.51.149.90/images/1137.png","http://117.51.149.90/images/1138.png"};
+                    for (String str : list) {
+                  	  URL url = new URL(str);
+                        String dell = "http://117.51.149.90/videos/";
+                      String fileName  =str.replace(dell,"");
+//                      URL serverUrl = new URL("http://localhost:8090/Demo/clean.sql");
+                      HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+                      String message = urlcon.getHeaderField(0);
+                      //判断远程服务器是不是有这个文件  如果有就下载,没有就continue
+                      if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+                        continue;
+                      }else{
+                    	  zos.putNextEntry(new ZipEntry(fileName));
+                          //FileInputStream fis = new FileInputStream(new File(files[i])); 
+                          InputStream fis = url.openConnection().getInputStream();  
+                          byte[] buffer = new byte[1024];    
+                          int r = 0;    
+                          while ((r = fis.read(buffer)) != -1) {    
+                              zos.write(buffer, 0, r);    
+                          }    
+                          fis.close();  
+                      }
+                      
+                      
+                    }
+                    zos.flush();    
+                    zos.close();
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } 
+        }
+            
+            @RequestMapping(value = "/download")
+            public void download(HttpServletRequest request, HttpServletResponse response){
+            	 
+                try {
+                    String downloadFilename = "中文.zip";//文件的名称
+                    downloadFilename = URLEncoder.encode(downloadFilename, "UTF-8");//转换中文否则可能会产生乱码
+                    response.setContentType("application/octet-stream");// 指明response的返回对象是文件流
+                    response.setHeader("Content-Disposition", "attachment;filename=" + downloadFilename);// 设置在下载框默认显示的文件名
+                    ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
+                    String[] files = new String[]{"http://117.51.149.90/videos/1144.mp4","http://117.51.149.90/videos/1207.mp4"};
+                    for (int i=0;i<files.length;i++) {
+                        URL url = new URL(files[i]);
+                       zos.putNextEntry(new ZipEntry(i+".mp4"));
+                       //FileInputStream fis = new FileInputStream(new File(files[i])); 
+                       InputStream fis = url.openConnection().getInputStream();  
+                       byte[] buffer = new byte[1024];    
+                       int r = 0;    
+                       while ((r = fis.read(buffer)) != -1) {    
+                           zos.write(buffer, 0, r);    
+                       }    
+                       fis.close();  
+                      } 
+                    zos.flush();    
+                    zos.close();
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } 
+        }
+            
 }
