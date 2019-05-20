@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +23,7 @@ import com.cennavi.audi_data_collect.bean.ParamsBean;
 import com.cennavi.audi_data_collect.service.EventHeatService;
 import com.cennavi.audi_data_collect.service.EventUserService;
 import com.cennavi.audi_data_collect.util.CSVUtil;
+import com.cennavi.audi_data_collect.util.HttpUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -272,6 +274,30 @@ public class EventHeatController {
 		s = Math.round(s * 10000d) / 10000d;
 		s = s * 1000;
 		return s;
+	}
+	
+	@RequestMapping(value="/onlineCarNum") 
+	public @ResponseBody JSONObject onlineCarNum(@RequestParam("citycode") String citycode) {
+		 
+		try {
+			Map<String, Object> returnMap = new HashMap<String, Object>();
+			String url = "http://211.151.84.27:18095/TrafficVolume/carnum";
+			String param = "?citycode="+citycode;
+			url = url + param;
+			String result = HttpUtils.sendGet(url);
+			JSONObject resultJson = JSONObject.fromObject(result);
+			Map<String, Object> resultMap = JSONObject.fromObject(resultJson);
+			int tatol = 0;
+			for(String key : resultMap.keySet()) {
+				tatol += Integer.parseInt(resultMap.get(key).toString());
+			}
+			returnMap.put("tatol", tatol);
+			return JSONObject.fromObject(returnMap);
+			 
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		return null;
 	}
 	
 	
