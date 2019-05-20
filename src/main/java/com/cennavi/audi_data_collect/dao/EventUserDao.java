@@ -1,5 +1,6 @@
 package com.cennavi.audi_data_collect.dao;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -438,7 +439,7 @@ public class EventUserDao {
 	//图片
 	public Object findImages(ParamsBean paramsBean) throws IOException {
 		String sql = "SELECT count(a.event_id) FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
-		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.type_code ,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
 		if (paramsBean.getEventId() != null && !paramsBean.getEventId().equals("")) {
 			sql2 += " and a.event_id=" + paramsBean.getEventId() + "";
 			JSONObject json;
@@ -532,27 +533,23 @@ public class EventUserDao {
 				for (String s : map.keySet()) {
 					map2.put(s, map.get(s));
 					if (s.equals("event_id")) {
-
-						String filePath = "http://117.51.149.90/images/" + map.get(s) + ".png";
-						URL url = new URL(filePath);
-						HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
-						String message = urlcon.getHeaderField(0);
-						if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
-							String filePath2 = "http://117.51.149.90/images/" + map.get(s) + ".jpg";
-							URL url2 = new URL(filePath2);
-							HttpURLConnection urlcon2 = (HttpURLConnection) url2.openConnection();
-							String message2 = urlcon2.getHeaderField(0);
-							if (StringUtils.hasText(message2) && message2.startsWith("HTTP/1.1 404")) {
-								map2.put("imageUrl", "");
-							} else {
-								map2.put("imageUrl", filePath2);
-							}
-
-						} else {
+//						/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/
+						String fileName = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+map.get("type_code")+"/"+map.get(s)+".png";
+						File file =new File(fileName);
+						if(file.exists()) {
+							String filePath = "http://117.51.149.90/images/"+map.get("type_code")+"/"+ map.get(s)+".png";
 							map2.put("imageUrl", filePath);
+						}else {
+							String fileName2 = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+map.get("type_code")+"/"+map.get(s)+".jpg";
+							File file2 =new File(fileName2);
+							if(file2.exists()) {
+								String filePath2 = "http://117.51.149.90/images/"+map.get("type_code")+"/"+ map.get(s)+".jpg";
+								map2.put("imageUrl", filePath2);
+							}else {
+								map2.put("imageUrl", "");
+							}
 						}
-
-//					 map2.put("videoUrl",  "http://117.51.149.90/videos/"+map.get(s)+".mp4");
+//						 
 					}
 				}
 
@@ -769,19 +766,34 @@ public class EventUserDao {
 		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql2);
 		for (Map<String, Object> map : queryForList) {
 			for (String s : map.keySet()) {
-				if (s.equals("event_id")) {
-					String filePath = "http://117.51.149.90/images/" + map.get(s) + ".png";
-					URL url = new URL(filePath);
-					HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
-					String message = urlcon.getHeaderField(0);
-					if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
-						String filePath2 = "http://117.51.149.90/images/" + map.get(s) + ".jpg";
-						list.add(filePath2);
-					} else {
-						list.add(filePath);
-					}
-
-				}
+				
+//				if (s.equals("event_id")) {
+//					
+//					String fileName = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/" + map.get(s) + ".png";
+//					File file =new File(fileName);
+//					if(file.exists()) {
+//						String filePath = "http://117.51.149.90/images/" + map.get(s) + ".png";
+//						
+//					}else {
+//						String fileName2 = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/" + map.get(s) + ".png";
+//						File file2 =new File(fileName);
+//						if(file2.exists()) {
+//							String filePath = "http://117.51.149.90/images/" + map.get(s) + ".jpg";
+//						}else {
+//							String filePath = "";
+//						}
+//					}
+//					URL url = new URL(filePath);
+//					HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
+//					String message = urlcon.getHeaderField(0);
+//					if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
+//						String filePath2 = "http://117.51.149.90/images/" + map.get(s) + ".jpg";
+//						list.add(filePath2);
+//					} else {
+//						list.add(filePath);
+//					}
+//
+//				}
 			}
 
 		}
@@ -867,17 +879,28 @@ public class EventUserDao {
 	}
 
 	public Object getVideo(ParamsBean paramsBean) throws IOException {
+		
+//		String fileName = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+map.get("type_code")+"/"+map.get(s)+".png";
+//		System.err.println(fileName);
+		
+		
+	
+	 
+		
 		Map<String, Object> map = new HashMap<String, Object>();
 		if (paramsBean.getEventId() != null && !paramsBean.getEventId().equals("")) {
-			String filePath = "http://117.51.149.90/videos/" + paramsBean.getEventId() + ".mp4";
-			URL url = new URL(filePath);
-			HttpURLConnection urlcon = (HttpURLConnection) url.openConnection();
-			String message = urlcon.getHeaderField(0);
-			if (StringUtils.hasText(message) && message.startsWith("HTTP/1.1 404")) {
-				map.put("videoPath", "");
-			} else {
+			String sql="SELECT b.type_code   FROM event_type b   LEFT JOIN  collection_info_new   a   ON a.event_type=b.type_code   WHERE 1=1  and event_id="+paramsBean.getEventId()+"";
+	 
+			String fileName= jdbcTemplate.queryForObject(sql, String.class);
+			String filePath = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+fileName+"/" + paramsBean.getEventId() + ".mp4";
+			
+			File file =new File(filePath);
+			if(file.exists()) {
 				map.put("videoPath", filePath);
+			}else {
+				map.put("videoPath", "");
 			}
+		 
 		}
 
 		JSONObject json = new JSONObject(map);
