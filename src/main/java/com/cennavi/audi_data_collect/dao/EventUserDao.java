@@ -439,7 +439,7 @@ public class EventUserDao {
 	//图片
 	public Object findImages(ParamsBean paramsBean) throws IOException {
 		String sql = "SELECT count(a.event_id) FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
-		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.type_code ,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.type_code ,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description as label FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
 		if (paramsBean.getEventId() != null && !paramsBean.getEventId().equals("")) {
 			sql2 += " and a.event_id=" + paramsBean.getEventId() + "";
 			JSONObject json;
@@ -892,11 +892,13 @@ public class EventUserDao {
 			String sql="SELECT b.type_code   FROM event_type b   LEFT JOIN  collection_info_new   a   ON a.event_type=b.type_code   WHERE 1=1  and event_id="+paramsBean.getEventId()+"";
 	 
 			String fileName= jdbcTemplate.queryForObject(sql, String.class);
-			String filePath = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+fileName+"/" + paramsBean.getEventId() + ".mp4";
 			
+			String filePath = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/videos/"+fileName+"/" + paramsBean.getEventId() + ".mp4";
+			System.err.println(filePath);
 			File file =new File(filePath);
 			if(file.exists()) {
-				map.put("videoPath", filePath);
+				String videoPath = "http://117.51.149.90/videos/" +fileName+"/" + paramsBean.getEventId() + ".mp4";
+				map.put("videoPath", videoPath);
 			}else {
 				map.put("videoPath", "");
 			}
