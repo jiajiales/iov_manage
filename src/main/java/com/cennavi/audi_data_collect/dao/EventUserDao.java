@@ -16,7 +16,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -439,7 +438,7 @@ public class EventUserDao {
 	//图片
 	public Object findImages(ParamsBean paramsBean) throws IOException {
 		String sql = "SELECT count(a.event_id) FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
-		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.type_code ,b.event_name_en as event_type,a.upload_time as date,d.en_name as route,e.description as label FROM event_type b   LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id  LEFT JOIN event_images_info e ON e.event_id =a.event_id  WHERE 1=1 ";
+		String sql2 = "SELECT a.event_id ,a.lon ,a.lat,b.type_code ,b.event_name_en as event_type,a.upload_time as date, d.en_name as route,e.label   FROM event_type b    LEFT JOIN   collection_info_new   a   ON a.event_type=b.type_code  LEFT JOIN  gaosu_segment  c   ON c.id=a.segment_id  LEFT JOIN gaosu  d  ON c.road_id=d.road_id   LEFT JOIN event_description_info e ON e.event_id =a.event_id  WHERE 1=1";
 		if (paramsBean.getEventId() != null && !paramsBean.getEventId().equals("")) {
 			sql2 += " and a.event_id=" + paramsBean.getEventId() + "";
 			JSONObject json;
@@ -584,15 +583,14 @@ public class EventUserDao {
 			String sql0 = "SELECT count(id) FROM event_images_info WHERE  event_id=" + eventPV.getEventId() + "";
 			int i = jdbcTemplate.queryForObject(sql0, Integer.class);
 			if (i == 0) {
-				String sql = "INSERT INTO  event_images_info  (id,event_id,description,upload_time) VALUES (?,?,?,?)";
+				String sql = "INSERT INTO  event_images_info  (id,event_id,description,upload_time) VALUES (?,?,?,LOCALTIMESTAMP (0))";
 				SimpleDateFormat fdate = new SimpleDateFormat("yyyyMMddHHmmss");
 				String str = fdate.format(new Date());
-				jdbcTemplate.update(sql, str, eventPV.getEventId(), eventPV.getDescription(), "LOCALTIMESTAMP (0)");
+				jdbcTemplate.update(sql, str, eventPV.getEventId(), eventPV.getDescription());
 				map.put("message", "add description success");
-
 			}
 			if (i == 1) {
-				String sql2 = "UPDATE event_images_info	SET description=? 	WHERE event_id=?";
+				String sql2 = "UPDATE event_images_info	SET description=?, upload_time=LOCALTIMESTAMP (0) 	WHERE event_id=?";
 				jdbcTemplate.update(sql2, eventPV.getDescription(), eventPV.getEventId());
 				map.put("message", "edit description success");
 			}
@@ -608,12 +606,11 @@ public class EventUserDao {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("message", "add comment failure");
 		if (eventPV.getEventId() != null && eventPV.getComment() != null) {
-			String sql = "INSERT INTO  event_videos_info  (id,event_id,comment,upload_time) VALUES (?,?,?,?)";
+			String sql = "INSERT INTO  event_videos_info  (id,event_id,comment,upload_time) VALUES (?,?,?,LOCALTIMESTAMP (0))";
 
 			SimpleDateFormat fdate = new SimpleDateFormat("yyyyMMddHHmmss");
 			String str = fdate.format(new Date());
-			eventPV.setUploadTime("LOCALTIMESTAMP (0)");
-			jdbcTemplate.update(sql, str, eventPV.getEventId(), eventPV.getComment(), eventPV.getUploadTime());
+			jdbcTemplate.update(sql, str, eventPV.getEventId(), eventPV.getComment());
 			map.put("message", "add comment success");
 		}
 		json = new JSONObject(map);
@@ -623,7 +620,7 @@ public class EventUserDao {
 	public Object findVideoCommentList(EventPV eventPV) {
 
 		if (eventPV.getEventId() != null) {
-			String sql = "SELECT * FROM event_videos_info WHERE  event_id=" + eventPV.getEventId() + "";
+			String sql = "SELECT * FROM event_videos_info WHERE  event_id=" + eventPV.getEventId() + " ORDER BY upload_time  DESC" ;
 			List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 
 //		 List< Map<String,Object>> queryForList2 = new ArrayList<Map<String,Object>>();
@@ -649,7 +646,7 @@ public class EventUserDao {
 
 	public List<EventPV> exportCsv() {
 
-		String sql = "SELECT event_id   ,LOCALTIMESTAMP (0) as upload_time FROM collection_info_new  WHERE substring(upload_time,0,11) in ('2019-04-08')";
+		String sql = "SELECT event_id  ,LOCALTIMESTAMP (0) as upload_time FROM collection_info_new  WHERE substring(upload_time,0,11)>= ('2019-04-08') and substring(upload_time,0,11)<= ('2019-04-17')";
 		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
 
 		List<EventPV> list = new ArrayList<EventPV>();
@@ -908,5 +905,5 @@ public class EventUserDao {
 		JSONObject json = new JSONObject(map);
 		return json;
 	}
-
+	 
 }

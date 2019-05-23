@@ -4,7 +4,6 @@ package com.cennavi.audi_data_collect.service;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -80,5 +79,6 @@ public class EventUserService {
 		// TODO Auto-generated method stub
 		return eventUserDao.getVideo(paramsBean);
 	}
+
 
 }
