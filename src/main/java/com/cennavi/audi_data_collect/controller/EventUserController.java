@@ -296,9 +296,8 @@ public class EventUserController {
             
          
     		
-            @ResponseBody
 			@RequestMapping(value = "/exportExcell")
-				public Object exportExcell(@RequestBody ParamsBean paramsBean,HttpServletResponse response) throws Exception {
+				public Object exportExcell(ParamsBean paramsBean,HttpServletResponse response) throws Exception {
 				
 				ExcelData data = new ExcelData();
 	            data.setName("Event_Data");
