@@ -296,5 +296,47 @@ public class EventUserController {
             
          
     		
-            
+            @ResponseBody
+			@RequestMapping(value = "/exportExcell")
+				public Object exportExcell(@RequestBody ParamsBean paramsBean,HttpServletResponse response) throws Exception {
+				
+				ExcelData data = new ExcelData();
+	            data.setName("Event_Data");
+	            List<String> titles = new ArrayList<String>();
+	            titles.add("event_id");
+	            titles.add("type_name");
+	            titles.add("road_name");
+	            titles.add("date");
+	            titles.add("time");
+	            titles.add("comment");
+	            data.setTitles(titles);
+
+	            List<List<Object>> rows = new ArrayList<List<Object>>();
+				  List<CVSBean> list=	eventUserService.exportExcell(paramsBean);
+				  
+				  for (int i = 0; i < list.size(); i++) {//遍历数组，把数组内容放进Excel的行中
+		                List<Object> row = new ArrayList<Object>();
+		                row.add(list.get(i).getEvent_id());
+		                row.add(list.get(i).getType_name());
+		                row.add(list.get(i).getRoad_name());
+		                row.add(list.get(i).getDate());
+		                row.add(list.get(i).getTime());
+		                row.add(list.get(i).getComments());
+		                rows.add(i, row);
+		            }
+
+		            data.setRows(rows);
+
+
+		            //生成本地
+		            /*File f = new File("c:/test.xlsx");
+		            FileOutputStream out = new FileOutputStream(f);
+		            ExportExcelUtils.exportExcel(data, out);
+		            out.close();*/
+		            SimpleDateFormat fdate=new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+		            String fileName="Event_Data.xlsx";//老版本的office改成xls
+		            ExcelOutPutUtils.exportExcel(response,fileName,data);
+		            
+		        return null;
+		    }
 }

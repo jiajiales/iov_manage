@@ -876,14 +876,6 @@ public class EventUserDao {
 	}
 
 	public Object getVideo(ParamsBean paramsBean) throws IOException {
-		
-//		String fileName = "/home/dc2-user/audi/apache-tomcat-8.5.35/webapps/images/"+map.get("type_code")+"/"+map.get(s)+".png";
-//		System.err.println(fileName);
-		
-		
-	
-	 
-		
 		Map<String, Object> map = new HashMap<String, Object>();
 		if (paramsBean.getEventId() != null && !paramsBean.getEventId().equals("")) {
 			String sql="SELECT b.type_code   FROM event_type b   LEFT JOIN  collection_info_new   a   ON a.event_type=b.type_code   WHERE 1=1  and event_id="+paramsBean.getEventId()+"";
@@ -904,6 +896,130 @@ public class EventUserDao {
 
 		JSONObject json = new JSONObject(map);
 		return json;
+	}
+	
+	public List<CVSBean> exportExcell(ParamsBean paramsBean) throws ParseException {
+		String sql = "SELECT  a.event_id,COALESCE(b.event_name_en, '0') as type_name,d.en_name as road_name,substring(a.upload_time,1,10) AS date, substring(a.upload_time,12,8) AS time    FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id    LEFT JOIN gaosu  d  ON c.road_id=d.road_id   WHERE 1=1  ";
+		String sql2 = "SELECT  a.event_id,  e.comment,e.upload_time   FROM collection_info_new a   LEFT JOIN event_type b ON b.type_code=a.event_type  LEFT JOIN  gaosu_segment  c  ON c.id=a.segment_id     LEFT JOIN gaosu  d  ON c.road_id=d.road_id LEFT JOIN event_videos_info  e ON e.event_id=a.event_id    WHERE 1=1    ";
+
+		if (!paramsBean.getCity().equals("") && paramsBean.getCity() != null) {
+			sql += " and a.city_name =  '" + paramsBean.getCity() + "' ";
+			sql2 += " and a.city_name =  '" + paramsBean.getCity() + "' ";
+
+		}
+		if (paramsBean.getEventsList().length > 0 && paramsBean.getEventsList() != null) {
+			String eventsList = "";
+			for (int i = 0; i < paramsBean.getEventsList().length; i++) {
+				eventsList = eventsList + "'" + paramsBean.getEventsList()[i] + "',";
+			}
+			if (eventsList.length() > 0) {
+				eventsList = eventsList.substring(0, eventsList.length() - 1);
+			}
+			sql += " and a.event_type IN ( " + eventsList + " )";
+			sql2 += " and a.event_type IN ( " + eventsList + " )";
+		}
+
+		if (paramsBean.getIsContinuous().equals("true")) {
+			if (paramsBean.getDataList().length > 0) {
+				if (!paramsBean.getDataList()[0].equals("") && paramsBean.getDataList()[0] != null
+						&& !paramsBean.getDataList()[1].equals("") && paramsBean.getDataList()[1] != null) {
+					sql += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='" + paramsBean.getDataList()[0]
+							+ "' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '" + paramsBean.getDataList()[1]
+							+ "' ";
+					sql2 += " AND to_timestamp(a.upload_time,'yyyy-MM-dd')>='" + paramsBean.getDataList()[0]
+							+ "' and to_timestamp(a.upload_time,'yyyy-MM-dd') <=  '" + paramsBean.getDataList()[1]
+							+ "' ";
+				}
+			}
+
+		} else {
+			if (paramsBean.getDataList().length > 0) {
+				String dataLists = "";
+				for (int i = 0; i < paramsBean.getDataList().length; i++) {
+					dataLists = dataLists + "'" + paramsBean.getDataList()[i] + "',";
+				}
+				if (dataLists.length() > 0) {
+					dataLists = dataLists.substring(0, dataLists.length() - 1);
+				}
+				sql += "AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in (" + dataLists + ") )";
+				sql2 += "AND  (to_timestamp(a.upload_time,'yyyy-MM-dd') in (" + dataLists + ") )";
+			}
+		}
+		if (paramsBean.getTimeFrame().length > 0) {
+
+			if (!paramsBean.getTimeFrame()[0].equals("") && paramsBean.getTimeFrame()[0] != null
+					&& !paramsBean.getTimeFrame()[1].equals("") && paramsBean.getTimeFrame()[1] != null) {
+				sql += " and substring(a.upload_time,12,5)>= '" + paramsBean.getTimeFrame()[0]
+						+ "' and substring(a.upload_time,12,5)<= '" + paramsBean.getTimeFrame()[1] + "'";
+				sql2 += " and substring(a.upload_time,12,5)>= '" + paramsBean.getTimeFrame()[0]
+						+ "' and substring(a.upload_time,12,5)<= '" + paramsBean.getTimeFrame()[1] + "'";
+
+			}
+		}
+
+		if (paramsBean.getRoadSecList().length > 0 && paramsBean.getRoadSecList() != null) {
+
+			String roadSecList = "";
+			for (int i = 0; i < paramsBean.getRoadSecList().length; i++) {
+				roadSecList = roadSecList + "'" + paramsBean.getRoadSecList()[i] + "',";
+			}
+			if (roadSecList.length() > 0) {
+				roadSecList = roadSecList.substring(0, roadSecList.length() - 1);
+			}
+			sql += "and d.r_id IN  ( " + roadSecList + " ) ";
+			sql2 += "and d.r_id IN  ( " + roadSecList + " ) ";
+		}
+		System.err.println("sql:" + sql);
+		List<Map<String, Object>> queryForList = jdbcTemplate.queryForList(sql);
+		List<Map<String, Object>> queryForList2 = jdbcTemplate.queryForList(sql2);
+		System.err.println(queryForList2);
+		List<CVSBean> list = new ArrayList();
+		for (Map<String, Object> map : queryForList) { // 将数据转换成json格式
+			CVSBean cVSBean = new CVSBean();
+			for (String k : map.keySet()) {
+				if (k.equals("event_id")) {
+					cVSBean.setEvent_id((Integer) map.get(k));
+					List<String>  list2= new  ArrayList<String>();
+					for (Map<String, Object> map2 : queryForList2) { // 将数据转换成json格式
+						for (String k2 : map2.keySet()) {
+							
+							if(k.equals(k2) && map.get(k).equals(map2.get(k2))) {
+								list2.add(map2.get("upload_time").toString()+" "+map2.get("comment").toString());
+							}
+						}
+						}
+					String comment="";
+					for (String str : list2) {
+						comment +=str+"\r\n";
+					}
+					comment=comment.trim();
+					System.err.println(comment);
+					cVSBean.setComments(comment);
+				}
+				if (k.equals("type_name")) {
+					cVSBean.setType_name(map.get(k).toString());
+				}
+				if (k.equals("road_name")) {
+					cVSBean.setRoad_name(map.get(k).toString());
+				}
+				if (k.equals("date")) { // 日期格式转换
+					String outDate = "";
+					Date date = inSDF.parse(map.get(k).toString());
+					outDate = outSDF.format(date);
+					cVSBean.setDate(outDate);
+				}
+				if (k.equals("time")) {// 时间格式转换
+//					   String outHour = "";
+//					    Date date = inSDFH.parse(map.get(k).toString());
+//			            outHour = outSDFH.format(date);
+					cVSBean.setTime(map.get(k).toString());
+				}
+
+			}
+			list.add(cVSBean);
+
+		}
+		return list;
 	}
 	 
 }

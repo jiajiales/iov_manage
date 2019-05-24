@@ -1,11 +1,21 @@
 package com.cennavi.audi_data_collect.bean;
 
+import java.util.List;
+
 public class CVSBean {
 private  Integer event_id;
 private String type_name;
 private String road_name;
 private String date;
 private String time;
+private  String comments;
+
+public String getComments() {
+	return comments;
+}
+public void setComments(String comments) {
+	this.comments = comments;
+}
 public Integer getEvent_id() {
 	return event_id;
 }

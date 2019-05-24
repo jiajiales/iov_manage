@@ -79,6 +79,10 @@ public class EventUserService {
 		// TODO Auto-generated method stub
 		return eventUserDao.getVideo(paramsBean);
 	}
+	public List<CVSBean> exportExcell(ParamsBean paramsBean) throws Exception {
+		// TODO Auto-generated method stub
+		return eventUserDao.exportExcell(paramsBean);
+	}
 
 
 }
