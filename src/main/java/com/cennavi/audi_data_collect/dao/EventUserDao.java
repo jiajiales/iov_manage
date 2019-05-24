@@ -984,7 +984,10 @@ public class EventUserDao {
 						for (String k2 : map2.keySet()) {
 							
 							if(k.equals(k2) && map.get(k).equals(map2.get(k2))) {
-								list2.add(map2.get("upload_time").toString()+" "+map2.get("comment").toString());
+								if( map2.get("upload_time")!=null &&  map2.get("comment")!=null) {
+									list2.add(map2.get("upload_time").toString()+" "+map2.get("comment").toString());
+
+								}
 							}
 						}
 						}
