@@ -993,7 +993,6 @@ public class EventUserDao {
 						comment +=str+"\r\n";
 					}
 					comment=comment.trim();
-					System.err.println(comment);
 					cVSBean.setComments(comment);
 				}
 				if (k.equals("type_name")) {
