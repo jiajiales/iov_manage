@@ -1,5 +1,5 @@
 server:
-  port: 9088
+  port: 9086
   servlet:
     context-path: /iov
 
@@ -7,8 +7,8 @@ server:
 spring:
   datasource :
       driver-class-name : org.postgresql.Driver
-      url : jdbc:postgresql://10.253.36.45:5432/car_networking
-#      url : jdbc:postgresql://117.48.214.8:9085/car_networking
+#      url : jdbc:postgresql://10.253.36.45:5432/car_networking
+      url : jdbc:postgresql://117.48.214.8:9085/car_networking
       username : postgres
       password : superman
   servlet:
@@ -18,13 +18,15 @@ spring:
            max-request-size: 200MB
     
   kafka:
+#    bootstrap-servers: 117.48.214.8:8003
     bootstrap-servers: 10.253.36.37:9092
 #    bootstrap-servers: 44.53.6.97:8001,44.53.6.98:8001,44.53.6.99:8001,117.48.214.8:8003,10.253.36.37:9092,10.253.36.39:3389
 
     consumer:
 
       enable-auto-commit: true
-      group-id: kafka2redis
+#      group-id: kafka2redis
+      group-id: kafka2redis1
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
@@ -39,7 +41,14 @@ spring:
 #    password: superman
 #    timeout: 3000
 #    database: 7
-
+params:
+  backTime: 2
+  travelInterval: 5
+  onlineTime: 10
+  matchUrl: http://117.48.214.8:9089/TrafficSS/Service/getHttpMatcheds
+#  matchUrl: http://10.253.36.45:8080/TrafficSS/Service/getHttpMatcheds
+  trackingUrl: 117.48.214.8:9089/TrafficSS/Service/getHttpMultiTrajectorys
+  reversCodingUrl: http://117.48.214.8:8001/service/coder/reverseGeocoding
 
 
  
@@ -51,7 +60,7 @@ spring:
       show-sql: true
 
 logging:
-  path: iov/
+  path: iovLog/
   file:
     max-history: 180
  
