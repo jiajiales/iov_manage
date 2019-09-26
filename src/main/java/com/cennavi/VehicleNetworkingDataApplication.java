@@ -1,4 +1,4 @@
-package com.cennavi.audi_data_collect;
+package com.cennavi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,10 +8,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 @SpringBootApplication
-public class AudiDataCollectApplication {
+public class VehicleNetworkingDataApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AudiDataCollectApplication.class, args);
+		SpringApplication.run(VehicleNetworkingDataApplication.class, args);
 	}
 	
 	/**

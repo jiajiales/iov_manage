@@ -1,16 +1,48 @@
 server:
-  port: 8009
+  port: 9088
   servlet:
-    context-path: /audiDataCollect
+    context-path: /iov
 
 
 spring:
   datasource :
       driver-class-name : org.postgresql.Driver
-      url : jdbc:postgresql://117.51.149.90:8001/audi_data
+      url : jdbc:postgresql://10.253.36.45:5432/car_networking
+#      url : jdbc:postgresql://117.48.214.8:9085/car_networking
       username : postgres
       password : superman
+  servlet:
+        multipart:
+           enabled: true
+           max-file-size: 20MB
+           max-request-size: 200MB
+    
+  kafka:
+    bootstrap-servers: 10.253.36.37:9092
+#    bootstrap-servers: 44.53.6.97:8001,44.53.6.98:8001,44.53.6.99:8001,117.48.214.8:8003,10.253.36.37:9092,10.253.36.39:3389
 
+    consumer:
+
+      enable-auto-commit: true
+      group-id: kafka2redis
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    producer:
+      group-id: kafka2redis
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+#  redis:
+#    host: 117.48.214.8
+#    port: 7379
+#    password: superman
+#    timeout: 3000
+#    database: 7
+
+
+
+ 
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -19,6 +51,10 @@ spring:
       show-sql: true
 
 logging:
-  path: F:/audiDataCollect_loggings/
+  path: iov/
   file:
     max-history: 180
+ 
+ 
+ 
+ 
